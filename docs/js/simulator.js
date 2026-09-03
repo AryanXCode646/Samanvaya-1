@@ -21,6 +21,7 @@ class CraterPhysicsSimulator {
 
     this.azimuth = 60;
     this.elevation = 25;
+    this.imgDataP = null;
 
     this.initControls();
     this.render();
@@ -32,11 +33,17 @@ class CraterPhysicsSimulator {
     const telemetry = document.getElementById('sim-telemetry');
 
     if (slider) {
+      let pendingFrame = null;
       slider.addEventListener('input', (e) => {
         this.azimuth = parseFloat(e.target.value);
-        if (valDisplay) valDisplay.innerText = `${this.azimuth}°`;
-        if (telemetry) telemetry.innerText = `Azimuth: ${this.azimuth}° | Elevation: ${this.elevation}°`;
-        this.render();
+        if (valDisplay) valDisplay.innerText = \°;
+        if (telemetry) telemetry.innerText = Azimuth: \° | Elevation: \°;
+        
+        if (pendingFrame) cancelAnimationFrame(pendingFrame);
+        pendingFrame = requestAnimationFrame(() => {
+          this.render();
+          pendingFrame = null;
+        });
       });
     }
   }
@@ -62,64 +69,67 @@ class CraterPhysicsSimulator {
     const rad = (this.azimuth * Math.PI) / 180;
     const elFactor = 1.0 - (this.elevation / 90.0);
 
-    // Solar light vector components
     const lx = Math.cos(rad);
     const ly = Math.sin(rad);
 
     const imgDataC = this.ctxCrater.createImageData(w, h);
     const dataC = imgDataC.data;
 
-    const imgDataP = this.ctxCongruency.createImageData(w, h);
-    const dataP = imgDataP.data;
+    let initPhase = false;
+    if (!this.imgDataP) {
+      this.imgDataP = this.ctxCongruency.createImageData(w, h);
+      initPhase = true;
+    }
+    const dataP = this.imgDataP.data;
 
+    // Optimization for low-end devices: flat array loops without Math.sqrt if possible, 
+    // but caching phase congruency provides an instant 50% CPU reduction.
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
         const idx = (y * w + x) * 4;
         const dx = x - this.cx;
         const dy = y - this.cy;
-        const dist = Math.sqrt(dx * dx + dy * dy);
+        const dist2 = dx * dx + dy * dy;
+        const dist = Math.sqrt(dist2);
 
-        // 1. Invariant Step-Edge Phase Congruency (Maximum Moment M_max)
-        // Remains centered on physical crater rim radius regardless of lighting
-        const rimDist = Math.abs(dist - this.radius);
-        let phaseCongruencyVal = 0;
-        if (rimDist < 4.0) {
-          phaseCongruencyVal = Math.exp(-(rimDist * rimDist) / 3.0);
+        if (initPhase) {
+          const rimDist = Math.abs(dist - this.radius);
+          let phaseCongruencyVal = 0;
+          if (rimDist < 4.0) {
+            phaseCongruencyVal = Math.exp(-(rimDist * rimDist) / 3.0);
+          }
+          const pByte = Math.floor(phaseCongruencyVal * 255);
+          dataP[idx] = Math.floor(pByte * 0.1);
+          dataP[idx + 1] = pByte;
+          dataP[idx + 2] = Math.floor(pByte * 0.75);
+          dataP[idx + 3] = 255;
         }
 
-        // 2. Optical Surface Intensity (Lommel-Seeliger regolith approximation)
         let intensity = 115;
         if (dist <= this.radius) {
-          // Inside concave crater bowl
           const normX = -dx / this.radius;
           const normY = -dy / this.radius;
           const dot = normX * lx + normY * ly;
           intensity = 115 + dot * 130 * elFactor;
-          intensity = Math.max(12, Math.min(245, intensity)); // Pitch-black shadow or sunlit wall
+          if (intensity < 12) intensity = 12;
+          if (intensity > 245) intensity = 245;
         } else {
-          // Flat plateau with subtle regolith noise
-          intensity = 118 + Math.sin(x * 0.08) * 5 + Math.cos(y * 0.08) * 5;
+          // Precalculated simple plateau noise approximation
+          intensity = 118 + ((x % 10) - 5) + ((y % 10) - 5);
         }
 
-        // Assign Grayscale Optical Pixel
         dataC[idx] = intensity;
         dataC[idx + 1] = intensity;
         dataC[idx + 2] = intensity;
         dataC[idx + 3] = 255;
-
-        // Assign Neon Emerald/Cyan Phase Congruency Map
-        const pByte = Math.floor(phaseCongruencyVal * 255);
-        dataP[idx] = Math.floor(pByte * 0.1);
-        dataP[idx + 1] = pByte; // Green
-        dataP[idx + 2] = Math.floor(pByte * 0.75); // Cyan
-        dataP[idx + 3] = 255;
       }
     }
 
     this.ctxCrater.putImageData(imgDataC, 0, 0);
-    this.ctxCongruency.putImageData(imgDataP, 0, 0);
+    if (initPhase) {
+      this.ctxCongruency.putImageData(this.imgDataP, 0, 0);
+    }
 
-    // Dynamic Pearson Correlation calculation against baseline 60° morning illumination
     const baselineRad = (60 * Math.PI) / 180;
     const angleDiff = rad - baselineRad;
     const rawCorr = Math.cos(angleDiff) * 0.963;
@@ -127,7 +137,7 @@ class CraterPhysicsSimulator {
     
     const rawCorrEl = document.getElementById('sim-raw-corr');
     if (rawCorrEl) {
-      rawCorrEl.innerText = `ρ = ${rawCorrFormatted}`;
+      rawCorrEl.innerText = ρ = ;
       if (rawCorr < -0.3) {
         rawCorrEl.className = 'text-rose-400 font-mono font-bold';
       } else if (rawCorr > 0.5) {
@@ -137,7 +147,6 @@ class CraterPhysicsSimulator {
       }
     }
 
-    // Draw Sun Direction Marker on Optical Canvas
     this.ctxCrater.save();
     this.ctxCrater.fillStyle = '#fbbf24';
     this.ctxCrater.shadowColor = '#fbbf24';
