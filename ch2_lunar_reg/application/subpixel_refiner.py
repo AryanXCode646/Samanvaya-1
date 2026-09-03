@@ -20,6 +20,11 @@ from typing import List, Optional, Tuple
 import cv2
 import numpy as np
 from ch2_lunar_reg.domain.models import KeypointMatch
+from ch2_lunar_reg.domain.subpixel import (
+    SubpixelSurfaceFit,
+    fit_quadratic_peak as domain_fit_quadratic_peak,
+    fit_quadratic_peaks_batch,
+)
 
 
 class SubpixelRefinerBase(ABC):
@@ -59,71 +64,16 @@ class TaylorSubpixelRefiner(SubpixelRefinerBase):
         self.max_displacement = max_displacement
 
     @staticmethod
-    def fit_quadratic_peak(patch_3x3: np.ndarray) -> Optional[Tuple[float, float, float]]:
+    def fit_quadratic_peak(patch_3x3: np.ndarray) -> Optional[SubpixelSurfaceFit]:
         r"""
         Fits an analytical 2D bivariate quadratic patch:
             f(x, y) = a * x^2 + b * y^2 + c * x * y + d * x + e * y + f
         around the integer grid point (0, 0) over a 3x3 local neighborhood.
         
-        Setting partial derivatives to zero:
-            \partial f / \partial x = 2*a*x + c*y + d = 0
-            \partial f / \partial y = 2*b*y + c*x + e = 0
-            
-        Continuous stationary point (x*, y*):
-            x* = (-2*b*d + c*e) / (4*a*b - c^2)
-            y* = (-2*a*e + c*d) / (4*a*b - c^2)
-            
-        Enforces strict concavity (true peak): a < 0, b < 0, (4*a*b - c^2) > 0.
-        Target sub-pixel precision RMSE < 0.40 pixels.
-        
-        Args:
-            patch_3x3: 3x3 similarity surface with center at index [1, 1].
-            
-        Returns:
-            Tuple of (dx*, dy*, f(x*, y*)) or None if saddle/degenerate.
+        Enforces negative-definite Hessian validation: det(H) = 4*a*b - c^2 > 0, a < 0, b < 0.
+        Returns SubpixelSurfaceFit with continuous (dx*, dy*, peak_val) and covariance eigenvalues.
         """
-        if patch_3x3.shape != (3, 3):
-            raise ValueError(f"Expected 3x3 patch, got shape {patch_3x3.shape}")
-
-        # Extract discrete samples at x, y in {-1, 0, +1}
-        # patch_3x3[row, col] where row is y (from -1 to +1), col is x (from -1 to +1)
-        z00 = float(patch_3x3[1, 1])  # center
-        z_xp = float(patch_3x3[1, 2]) # (x=+1, y=0)
-        z_xm = float(patch_3x3[1, 0]) # (x=-1, y=0)
-        z_yp = float(patch_3x3[2, 1]) # (x=0, y=+1)
-        z_ym = float(patch_3x3[0, 1]) # (x=0, y=-1)
-        z_pp = float(patch_3x3[2, 2]) # (x=+1, y=+1)
-        z_pm = float(patch_3x3[0, 2]) # (x=+1, y=-1)
-        z_mp = float(patch_3x3[2, 0]) # (x=-1, y=+1)
-        z_mm = float(patch_3x3[0, 0]) # (x=-1, y=-1)
-
-        # Analytical quadratic polynomial coefficients:
-        # f(x, y) = a*x^2 + b*y^2 + c*x*y + d*x + e*y + f
-        a = (z_xp - 2.0 * z00 + z_xm) / 2.0
-        b = (z_yp - 2.0 * z00 + z_ym) / 2.0
-        c = (z_pp - z_pm - z_mp + z_mm) / 4.0
-        d = (z_xp - z_xm) / 2.0
-        e = (z_yp - z_ym) / 2.0
-        f = z00
-
-        # Determinant of the Hessian: D = 4*a*b - c^2
-        det_h = 4.0 * a * b - c**2
-
-        # Check for strict local maximum: negative definite Hessian
-        if det_h <= 1e-7 or a >= 0.0 or b >= 0.0:
-            return None
-
-        # Solve for continuous analytical sub-pixel peak (x*, y*)
-        dx = (-2.0 * b * d + c * e) / det_h
-        dy = (-2.0 * a * e + c * d) / det_h
-
-        # Validate that the sub-pixel peak does not drift beyond the cell boundary [-1, 1]
-        if abs(dx) > 1.0 or abs(dy) > 1.0:
-            return None
-
-        # Continuous peak similarity value
-        peak_val = a * dx**2 + b * dy**2 + c * dx * dy + d * dx + e * dy + f
-        return float(dx), float(dy), float(peak_val)
+        return domain_fit_quadratic_peak(patch_3x3)
 
     def compute_local_ncc_surface(
         self,
@@ -215,6 +165,10 @@ class TaylorSubpixelRefiner(SubpixelRefinerBase):
                 confidence=match.confidence,
                 subpixel_refined=True,
                 residual_error=match.residual_error,
+                sigma_x=getattr(quad_fit, "sigma_x", None),
+                sigma_y=getattr(quad_fit, "sigma_y", None),
+                cov_xy=getattr(quad_fit, "cov_xy", None),
+                weight=getattr(quad_fit, "weight", None),
             )
 
         return match

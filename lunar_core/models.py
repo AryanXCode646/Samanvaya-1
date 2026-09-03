@@ -13,6 +13,9 @@ import numpy as np
 class SensorModality(str, Enum):
     OHRC = "OHRC"          # Chandrayaan-2 Orbiter High Resolution Camera (~0.25m)
     TMC2 = "TMC-2"        # Chandrayaan-2 Terrain Mapping Camera-2 (~5.0m)
+    TMC2_NADIR = "CH2_TMC2_NADIR"
+    TMC2_FORE = "CH2_TMC2_FORE"
+    TMC2_AFT = "CH2_TMC2_AFT"
     IIRS = "IIRS"          # Chandrayaan-2 Imaging Infrared Spectrometer (~80m)
     LRO_NAC = "LRO_NAC"    # Lunar Reconnaissance Orbiter Narrow Angle Camera (~0.5m)
     SYNTHETIC = "SYNTHETIC"

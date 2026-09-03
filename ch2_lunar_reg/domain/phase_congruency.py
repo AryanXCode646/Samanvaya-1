@@ -34,6 +34,7 @@ class LogGaborFilterBank:
     """
     2D Log-Gabor wavelet filter bank constructed in frequency space.
     Eliminates DC component entirely, preventing low-frequency illumination bias.
+    Fully vectorized with precomputed frequency grids (u, v, radius, theta).
     """
 
     def __init__(
@@ -52,63 +53,94 @@ class LogGaborFilterBank:
         self.sigma_on_f = sigma_on_f
         self.d_theta_on_sigma = d_theta_on_sigma
         self._filter_cache: dict = {}
+        self._tensor_filter_cache: dict = {}
         self._grid_cache: dict = {}
+
+    def get_frequency_grids(
+        self, rows: int, cols: int
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Retrieves or caches precomputed frequency coordinate grids: (u, v, radius, theta).
+        """
+        cache_key = (rows, cols)
+        if cache_key in self._grid_cache:
+            return self._grid_cache[cache_key]
+
+        u = np.linspace(-0.5, 0.5, cols, endpoint=False, dtype=np.float32)
+        v = np.linspace(-0.5, 0.5, rows, endpoint=False, dtype=np.float32)
+        x, y = np.meshgrid(u, v)
+
+        # FFT shift to align DC at (0, 0)
+        x = np.fft.ifftshift(x)
+        y = np.fft.ifftshift(y)
+
+        radius = np.sqrt(x**2 + y**2).astype(np.float32)
+        theta = np.arctan2(-y, x).astype(np.float32)
+        radius[0, 0] = 1.0  # Avoid log(0) singularity at DC
+
+        grids = (x, y, radius, theta)
+        self._grid_cache[cache_key] = grids
+        return grids
+
+    def build_filters_tensor(self, rows: int, cols: int) -> np.ndarray:
+        """
+        Constructs vectorized 4D frequency-domain Log-Gabor kernels of shape [num_orientations, num_scales, rows, cols].
+        Precomputes and caches frequency grids and kernels for O(1) repeated evaluation with zero Python loops.
+        """
+        cache_key = (rows, cols)
+        if cache_key in self._tensor_filter_cache:
+            return self._tensor_filter_cache[cache_key]
+
+        _, _, radius, theta = self.get_frequency_grids(rows, cols)
+
+        theta_sigma = float(np.pi / self.num_orientations / self.d_theta_on_sigma)
+
+        # Vectorized angular spread filter across all orientations: shape [O, rows, cols]
+        ang = (
+            np.arange(self.num_orientations, dtype=np.float32)
+            * (np.pi / self.num_orientations)
+        ).reshape(-1, 1, 1)
+
+        diff_theta1 = np.abs(theta[None, :, :] - ang)
+        diff_theta1 = np.minimum(diff_theta1, 2.0 * np.pi - diff_theta1)
+
+        diff_theta2 = np.abs(theta[None, :, :] - (ang + np.pi))
+        diff_theta2 = np.minimum(diff_theta2, 2.0 * np.pi - diff_theta2)
+
+        diff_theta = np.minimum(diff_theta1, diff_theta2)
+        spread = np.exp(-(diff_theta**2) / (2.0 * theta_sigma**2)).astype(np.float32)
+
+        # Vectorized radial Log-Gabor filter across all scales: shape [S, rows, cols]
+        s_idx = np.arange(self.num_scales, dtype=np.float32).reshape(-1, 1, 1)
+        wavelength = (self.min_wavelength * (self.mult**s_idx)).astype(np.float32)
+        f0 = 1.0 / wavelength
+
+        log_rad = np.log(radius[None, :, :] / f0)
+        radial = np.exp(
+            -(log_rad**2) / (2.0 * (np.log(self.sigma_on_f)) ** 2)
+        ).astype(np.float32)
+        radial[:, 0, 0] = 0.0  # Zero DC component across all scales
+
+        # 4D filter bank: [O, S, rows, cols] via tensor broadcasting
+        filters_4d = (spread[:, None, :, :] * radial[None, :, :, :]).astype(np.float32)
+
+        self._tensor_filter_cache[cache_key] = filters_4d
+        return filters_4d
 
     def build_filters(self, rows: int, cols: int) -> List[List[np.ndarray]]:
         """
         Constructs 2D frequency-domain Log-Gabor kernels of dimensions (rows, cols).
-        Caches precomputed frequency grids and kernels for O(1) repeated evaluation.
+        Maintains backward compatibility returning List[List[np.ndarray]].
         """
         cache_key = (rows, cols)
         if cache_key in self._filter_cache:
             return self._filter_cache[cache_key]
 
-        if cache_key in self._grid_cache:
-            radius, theta = self._grid_cache[cache_key]
-        else:
-            # Frequency grid [-0.5, 0.5]
-            u1 = np.linspace(-0.5, 0.5, cols, endpoint=False)
-            u2 = np.linspace(-0.5, 0.5, rows, endpoint=False)
-            x, y = np.meshgrid(u1, u2)
-            
-            # FFT shift to align DC at (0, 0)
-            x = np.fft.ifftshift(x)
-            y = np.fft.ifftshift(y)
-            
-            radius = np.sqrt(x**2 + y**2)
-            theta = np.arctan2(-y, x)
-            radius[0, 0] = 1.0  # Avoid log(0) singularity at DC
-            self._grid_cache[cache_key] = (radius, theta)
-        
-        theta_sigma = np.pi / self.num_orientations / self.d_theta_on_sigma
-        
-        filters: List[List[np.ndarray]] = []
-        for o in range(self.num_orientations):
-            ang = o * np.pi / self.num_orientations
-            # Angular spread filter (Gaussian in angle space)
-            diff_theta1 = np.abs(theta - ang)
-            diff_theta1 = np.minimum(diff_theta1, 2.0 * np.pi - diff_theta1)
-            
-            diff_theta2 = np.abs(theta - (ang + np.pi))
-            diff_theta2 = np.minimum(diff_theta2, 2.0 * np.pi - diff_theta2)
-            
-            diff_theta = np.minimum(diff_theta1, diff_theta2)
-            spread = np.exp(-(diff_theta**2) / (2.0 * theta_sigma**2))
-            
-            scale_filters: List[np.ndarray] = []
-            for s in range(self.num_scales):
-                wavelength = self.min_wavelength * (self.mult ** s)
-                f0 = 1.0 / wavelength
-                
-                # Radial Log-Gabor filter
-                log_rad = np.log(radius / f0)
-                radial = np.exp(-(log_rad**2) / (2.0 * (np.log(self.sigma_on_f))**2))
-                radial[0, 0] = 0.0  # Zero DC component
-                
-                filt = (radial * spread).astype(np.float32)
-                scale_filters.append(filt)
-            filters.append(scale_filters)
-            
+        tensor_filters = self.build_filters_tensor(rows, cols)
+        filters: List[List[np.ndarray]] = [
+            [tensor_filters[o, s] for s in range(self.num_scales)]
+            for o in range(self.num_orientations)
+        ]
         self._filter_cache[cache_key] = filters
         return filters
 
@@ -117,6 +149,7 @@ class PhaseCongruencyEngine:
     """
     Computes illumination-invariant Phase Congruency and RIFT moment representations.
     Crucial for handling extreme shadow reversals on lunar crater rims.
+    Vectorized O(N log N) execution with zero explicit Python loops across scales and orientations.
     """
 
     def __init__(
@@ -137,7 +170,7 @@ class PhaseCongruencyEngine:
 
     def compute(self, image: np.ndarray) -> PhaseCongruencyOutput:
         """
-        Executes Log-Gabor phase congruency decomposition.
+        Executes fully vectorized Log-Gabor phase congruency decomposition.
         
         Args:
             image: 2D grayscale image (float32, [0, 1]).
@@ -148,95 +181,61 @@ class PhaseCongruencyEngine:
         img = image.astype(np.float32)
         h, w = img.shape
         fft_img = np.fft.fft2(img)
-        
-        filters = self.filter_bank.build_filters(h, w)
+
+        # 4D filter bank: [num_orientations, num_scales, h, w]
+        filters_tensor = self.filter_bank.build_filters_tensor(h, w)
         num_orient = self.filter_bank.num_orientations
-        num_scales = self.filter_bank.num_scales
-        
-        eo: List[List[np.ndarray]] = []
-        amp: List[List[np.ndarray]] = []
-        orientation_energy: List[np.ndarray] = []
-        sum_amplitude = np.zeros((h, w), dtype=np.float32)
-        
-        for o in range(num_orient):
-            eo_scale: List[np.ndarray] = []
-            amp_scale: List[np.ndarray] = []
-            sum_e = np.zeros((h, w), dtype=np.float32)
-            sum_o = np.zeros((h, w), dtype=np.float32)
-            
-            for s in range(num_scales):
-                kernel = filters[o][s]
-                # Inverse FFT of bandpassed spectrum gives analytic signal (even + j*odd)
-                analytic = np.fft.ifft2(fft_img * kernel)
-                e_val = np.real(analytic).astype(np.float32)
-                o_val = np.imag(analytic).astype(np.float32)
-                
-                a_val = np.sqrt(e_val**2 + o_val**2)
-                eo_scale.append(analytic)
-                amp_scale.append(a_val)
-                sum_amplitude += a_val
-                
-                sum_e += e_val
-                sum_o += o_val
-                
-            eo.append(eo_scale)
-            amp.append(amp_scale)
-            # Local energy at orientation o
-            e_mag = np.sqrt(sum_e**2 + sum_o**2)
-            orientation_energy.append(e_mag)
-            
+
+        # Batched spectral filtering: [O, S, H, W]
+        filtered_spectra = fft_img[None, None, :, :] * filters_tensor
+
+        # Vectorized 2D inverse FFT across all orientations and scales simultaneously - O(N log N)
+        analytic = np.fft.ifft2(filtered_spectra, axes=(-2, -1))
+        e_val = np.real(analytic).astype(np.float32)
+        o_val = np.imag(analytic).astype(np.float32)
+
+        amp = np.sqrt(e_val**2 + o_val**2)
+        sum_amplitude = np.sum(amp, axis=(0, 1))
+
+        # Local energy per orientation: [O, H, W]
+        sum_e = np.sum(e_val, axis=1)
+        sum_o = np.sum(o_val, axis=1)
+        orientation_energy = np.sqrt(sum_e**2 + sum_o**2)
+
         # Rayleigh noise estimation from smallest scale responses (Kovesi noise model)
-        total_energy = np.zeros((h, w), dtype=np.float32)
-        pc_orientation: List[np.ndarray] = []
-        
-        for o in range(num_orient):
-            e_mag = orientation_energy[o]
-            # Smallest scale amplitude for noise estimate
-            smallest_scale_amp = amp[o][0]
-            tau = np.median(smallest_scale_amp) / np.sqrt(np.log(4.0))
-            noise_thresh = self.k_noise * tau
-            
-            # Thresholded energy
-            thresholded_e = np.maximum(e_mag - noise_thresh, 0.0)
-            total_energy += thresholded_e
-            pc_orientation.append(thresholded_e)
-            
+        smallest_scale_amp = amp[:, 0, :, :]
+        tau = np.median(smallest_scale_amp, axis=(-2, -1), keepdims=True) / np.sqrt(np.log(4.0))
+        noise_thresh = self.k_noise * tau
+
+        # Thresholded energy per orientation
+        thresholded_e = np.maximum(orientation_energy - noise_thresh, 0.0)
+        total_energy = np.sum(thresholded_e, axis=0)
+
         eps = 1e-4
-        pc_total = total_energy / (sum_amplitude + eps)
-        pc_total = np.clip(pc_total, 0.0, 1.0)
-        
-        # Kovesi Moment Analysis for M_max and M_min
-        # Moments of phase congruency determine orientation and anisotropy of feature
-        cov_x2 = np.zeros((h, w), dtype=np.float32)
-        cov_y2 = np.zeros((h, w), dtype=np.float32)
-        cov_xy = np.zeros((h, w), dtype=np.float32)
-        
-        for o in range(num_orient):
-            angle = o * np.pi / num_orient
-            p = pc_orientation[o]
-            px = p * np.cos(angle)
-            py = p * np.sin(angle)
-            cov_x2 += px**2
-            cov_y2 += py**2
-            cov_xy += px * py
-            
-        cov_x2 /= (num_orient / 2.0)
-        cov_y2 /= (num_orient / 2.0)
-        cov_xy = 2.0 * cov_xy / (num_orient / 2.0)
-        
+        pc_total = np.clip(total_energy / (sum_amplitude + eps), 0.0, 1.0)
+
+        # Vectorized Kovesi Moment Analysis for M_max and M_min
+        angles = (
+            np.arange(num_orient, dtype=np.float32) * (np.pi / num_orient)
+        ).reshape(-1, 1, 1)
+        px = thresholded_e * np.cos(angles)
+        py = thresholded_e * np.sin(angles)
+
+        cov_x2 = np.sum(px**2, axis=0) / (num_orient / 2.0)
+        cov_y2 = np.sum(py**2, axis=0) / (num_orient / 2.0)
+        cov_xy = 2.0 * np.sum(px * py, axis=0) / (num_orient / 2.0)
+
         term = np.sqrt(cov_xy**2 + (cov_x2 - cov_y2)**2 + 1e-8)
         m_max = 0.5 * (cov_y2 + cov_x2 + term)
         m_min = 0.5 * (cov_y2 + cov_x2 - term)
-        
+
         # Normalize moments to [0, 1]
         m_max = np.clip(m_max / (np.max(m_max) + eps), 0.0, 1.0)
         m_min = np.clip(m_min / (np.max(m_min) + eps), 0.0, 1.0)
-        
+
         # Maximum Index Map (MIM) for RIFT descriptor
-        # Stack orientation energies and find argmax orientation per pixel
-        energy_stack = np.stack(orientation_energy, axis=0)  # [num_orient, h, w]
-        mim = np.argmax(energy_stack, axis=0).astype(np.uint8)
-        
+        mim = np.argmax(orientation_energy, axis=0).astype(np.uint8)
+
         return PhaseCongruencyOutput(
             phase_congruency=pc_total,
             max_moment=m_max,

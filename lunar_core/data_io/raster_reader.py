@@ -7,13 +7,23 @@ from __future__ import annotations
 import os
 from pathlib import Path
 from typing import Optional, Tuple, Union
+import urllib.parse
 import numpy as np
 import rasterio
 
 try:
-    import defusedxml.ElementTree as hardened_ET
+    from lxml import etree as lxml_ET
+    LXML_AVAILABLE = True
 except ImportError:
-    import xml.etree.ElementTree as hardened_ET
+    lxml_ET = None
+    LXML_AVAILABLE = False
+
+try:
+    import defusedxml.ElementTree as defused_ET
+    DEFUSED_AVAILABLE = True
+except ImportError:
+    import xml.etree.ElementTree as defused_ET
+    DEFUSED_AVAILABLE = False
 
 from lunar_core.models import GeoRaster, SensorModality, SunAngles
 
@@ -24,13 +34,28 @@ MAX_UNCOMPRESSED_BYTES = 4 * 1024**3  # 4 GiB hard memory safety limit
 
 def sanitize_path(input_path: Union[str, Path], allowed_dir: Optional[Path] = None) -> Path:
     """
-    Sanitizes file paths against directory traversal attacks ('../' escapes) and null bytes.
+    Sanitizes file paths and URIs against directory traversal attacks ('../' escapes),
+    null bytes, and escapes outside designated directories.
+    Handles standard paths and file:// URIs.
     """
-    path_str = str(input_path)
+    path_str = str(input_path).strip()
     if "\x00" in path_str:
         raise ValueError("Security violation: null byte detected in file path")
-    
-    resolved = Path(input_path).resolve()
+
+    # Parse and unwrap file:// URI schemes
+    if path_str.startswith("file:"):
+        parsed = urllib.parse.urlparse(path_str)
+        path_str = urllib.parse.unquote(parsed.path)
+        if parsed.netloc and parsed.netloc != "localhost":
+            path_str = f"/{parsed.netloc}{path_str}"
+
+    # Handle percent-encoded characters e.g. %2e%2e%2f -> ../
+    unquoted = urllib.parse.unquote(path_str)
+    if "\x00" in unquoted:
+        raise ValueError("Security violation: null byte detected in file path")
+
+    resolved = Path(unquoted).resolve()
+
     if allowed_dir is not None:
         allowed = allowed_dir.resolve()
         try:
@@ -106,14 +131,29 @@ class PlanetaryRasterReader:
         )
 
     @staticmethod
-    def parse_pds4_metadata(label_xml_path: Union[str, Path], allowed_dir: Optional[Path] = None) -> Tuple[SunAngles, float, SensorModality]:
+    def parse_pds4_metadata(
+        label_xml_path: Union[str, Path], allowed_dir: Optional[Path] = None
+    ) -> Tuple[SunAngles, float, SensorModality]:
         """
-        Parses PDS4 XML label for Chandrayaan-2/LRO products with XXE protection:
+        Parses PDS4 XML label for Chandrayaan-2/LRO products with hardened XXE protection:
+        Ensures entity expansion is strictly disabled (`resolve_entities=False`).
         Extracts solar illumination angles, pixel resolution (GSD), and sensor modality.
         """
         safe_path = sanitize_path(label_xml_path, allowed_dir=allowed_dir)
-        tree = hardened_ET.parse(str(safe_path))
-        root = tree.getroot()
+
+        # Parse with strict XXE protection: entity expansion strictly disabled
+        if LXML_AVAILABLE and lxml_ET is not None:
+            parser = lxml_ET.XMLParser(
+                resolve_entities=False,
+                no_network=True,
+                dtd_validation=False,
+                load_dtd=False,
+            )
+            tree = lxml_ET.parse(str(safe_path), parser=parser)
+            root = tree.getroot()
+        else:
+            tree = defused_ET.parse(str(safe_path), forbid_dtd=True, forbid_entities=True)
+            root = tree.getroot()
 
         # Extract namespace if present
         ns = {"pds": root.tag.split("}")[0].strip("{")} if "}" in root.tag else {}
@@ -124,11 +164,18 @@ class PlanetaryRasterReader:
         gsd = 1.0
         modality = SensorModality.SYNTHETIC
 
+        def get_elem(tag_name: str):
+            if ns:
+                elem = root.find(f".//pds:{tag_name}", ns)
+                if elem is not None:
+                    return elem
+            return root.find(f".//{tag_name}")
+
         # Search for solar geometry in PDS4 observation area
-        az_node = root.find(".//pds:solar_azimuth_angle", ns) or root.find(".//solar_azimuth_angle")
-        el_node = root.find(".//pds:solar_elevation_angle", ns) or root.find(".//solar_elevation_angle")
-        gsd_node = root.find(".//pds:pixel_resolution", ns) or root.find(".//pixel_resolution")
-        sensor_node = root.find(".//pds:instrument_id", ns) or root.find(".//instrument_id")
+        az_node = get_elem("solar_azimuth_angle")
+        el_node = get_elem("solar_elevation_angle")
+        gsd_node = get_elem("pixel_resolution")
+        sensor_node = get_elem("instrument_id")
 
         if az_node is not None and az_node.text:
             sun_az = float(az_node.text)

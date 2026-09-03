@@ -119,6 +119,10 @@ class KeypointMatch:
     confidence: float
     subpixel_refined: bool = False
     residual_error: Optional[float] = None
+    sigma_x: Optional[float] = None
+    sigma_y: Optional[float] = None
+    cov_xy: Optional[float] = None
+    weight: Optional[float] = None
 
 
 @dataclass

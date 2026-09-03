@@ -102,8 +102,38 @@ def cmd_align(args: argparse.Namespace) -> None:
 
     if warped is not None:
         warped_file = out_dir / "registered_source.tif"
-        PlanetaryRasterWriter.write_geotiff(warped, raster_ref, warped_file)
+        PlanetaryRasterWriter.write_geotiff(output_path=warped_file, data=warped, reference_raster=raster_ref)
         print(f"🗺️ Exported Registered GeoTIFF: {warped_file}")
+
+    # Export USGS ISIS3 Jigsaw GCP CSV
+    try:
+        from lunar_core.data_io.isis_exporter import IsisGcpExporter
+        isis_file = out_dir / "samanvaya_isis3_jigsaw_gcp.csv"
+        exporter = IsisGcpExporter()
+        exporter.export_pairwise_csv(matches=inliers, ref_raster=raster_ref, output_path=isis_file)
+        print(f"🌐 Exported USGS ISIS3 Jigsaw GCPs: {isis_file}")
+    except Exception as exc:
+        print(f"⚠️ ISIS3 GCP Export skipped: {exc}")
+
+    # Export Executive PDF Mission Report
+    try:
+        from lunar_core.evaluation.pdf_reporter import MissionReportGenerator
+        pdf_file = out_dir / "samanvaya_mission_report.pdf"
+        reporter = MissionReportGenerator()
+        reporter.generate_report(
+            metrics=report,
+            matches=inliers,
+            output_pdf_path=pdf_file,
+            ref_modality=raster_ref.modality if hasattr(raster_ref, "modality") else None,
+            target_modality=raster_src.modality if hasattr(raster_src, "modality") else None,
+            ref_gsd=raster_ref.gsd_meters if hasattr(raster_ref, "gsd_meters") else 0.5,
+            target_gsd=raster_src.gsd_meters if hasattr(raster_src, "gsd_meters") else 0.25,
+            ref_sun=raster_ref.sun_angles if hasattr(raster_ref, "sun_angles") else None,
+            target_sun=raster_src.sun_angles if hasattr(raster_src, "sun_angles") else None,
+        )
+        print(f"📑 Exported Executive Mission PDF Report: {pdf_file}")
+    except Exception as exc:
+        print(f"⚠️ PDF Report generation skipped: {exc}")
 
     print("\n" + "=" * 50)
     print("📊 SAMANVAYA MISSION KPI SUMMARY")
@@ -134,6 +164,14 @@ def cmd_info(args: argparse.Namespace) -> None:
     print(f"  Kornia Version  : {kornia.__version__}")
     print(f"  OpenCV Version  : {cv2.__version__}")
     print(f"  Rasterio Version: {rasterio.__version__}")
+    print("\nOperational Capabilities:")
+    print("  • Vectorized Log-Gabor Phase Congruency (Zero-DC Illumination Invariance)")
+    print("  • O(1) Parabolic Taylor Sub-pixel Refinement (Strict Negative-Definite Hessian)")
+    print("  • Out-of-Core Windowed Tiling for Gigapixel GeoTIFFs")
+    print("  • 3-Step Hyperspectral Cascade Bridge (OHRC 0.25m -> TMC-2 5m -> IIRS 80m)")
+    print("  • USGS ISIS3 Jigsaw GCP Exporter with Curvature Covariance")
+    print("  • Automated Executive ReportLab PDF Mission Report Generator")
+    print("  • FastAPI WebSocket Live Streaming Endpoint (/ws/align)")
 
 
 def main() -> None:

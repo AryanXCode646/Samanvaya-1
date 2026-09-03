@@ -375,84 +375,96 @@ class PlanetaryTileProcessor:
 
         raw_global_matches: List[KeypointMatch] = []
 
-        # Step 4: Iterate over tile windows without full memory allocation
-        for win_ref in ref_windows:
-            processed_tiles += 1
+        # Open dataset handles once for the entire sliding window loop to avoid repeated I/O overhead
+        open_src = rasterio.open(str(source_raster)) if isinstance(source_raster, (str, Path)) else None
+        open_ref = rasterio.open(str(reference_raster)) if isinstance(reference_raster, (str, Path)) else None
+        src_handle = open_src if open_src is not None else source_raster
+        ref_handle = open_ref if open_ref is not None else reference_raster
 
-            # Compute corresponding source window accounting for coarse offset if present
-            if coarse_overlap and coarse_overlap.confidence > 0.20:
-                src_x = int(round(win_ref.col_off - coarse_overlap.dx_pixels))
-                src_y = int(round(win_ref.row_off - coarse_overlap.dy_pixels))
-            else:
-                src_x = int(win_ref.col_off)
-                src_y = int(win_ref.row_off)
+        try:
+            # Step 4: Iterate over tile windows without full memory allocation
+            for win_ref in ref_windows:
+                processed_tiles += 1
 
-            # Clamp source window to raster bounds
-            src_x = max(0, min(w_src - self.tile_size // 4, src_x))
-            src_y = max(0, min(h_src - self.tile_size // 4, src_y))
-            src_w = min(win_ref.width, w_src - src_x)
-            src_h = min(win_ref.height, h_src - src_y)
+                # Compute corresponding source window accounting for coarse offset if present
+                if coarse_overlap and coarse_overlap.confidence > 0.20:
+                    src_x = int(round(win_ref.col_off - coarse_overlap.dx_pixels))
+                    src_y = int(round(win_ref.row_off - coarse_overlap.dy_pixels))
+                else:
+                    src_x = int(win_ref.col_off)
+                    src_y = int(win_ref.row_off)
 
-            if src_w < 64 or src_h < 64:
-                continue
+                # Clamp source window to raster bounds
+                src_x = max(0, min(w_src - self.tile_size // 4, src_x))
+                src_y = max(0, min(h_src - self.tile_size // 4, src_y))
+                src_w = min(win_ref.width, w_src - src_x)
+                src_h = min(win_ref.height, h_src - src_y)
 
-            win_src = Window(col_off=src_x, row_off=src_y, width=src_w, height=src_h)
+                if src_w < 64 or src_h < 64:
+                    continue
 
-            # Read tiles out-of-core
-            tile_ref = self._read_window_data(reference_raster, win_ref)
-            tile_src = self._read_window_data(source_raster, win_src)
+                win_src = Window(col_off=src_x, row_off=src_y, width=src_w, height=src_h)
 
-            # Fast multi-scale inference: resize if tile exceeds inference_dim
-            scale_src_x, scale_src_y = 1.0, 1.0
-            scale_ref_x, scale_ref_y = 1.0, 1.0
+                # Read tiles out-of-core
+                tile_ref = self._read_window_data(ref_handle, win_ref)
+                tile_src = self._read_window_data(src_handle, win_src)
 
-            if self.inference_dim and (tile_src.shape[0] > self.inference_dim or tile_src.shape[1] > self.inference_dim):
-                scale_src_x = tile_src.shape[1] / float(self.inference_dim)
-                scale_src_y = tile_src.shape[0] / float(self.inference_dim)
-                scale_ref_x = tile_ref.shape[1] / float(self.inference_dim)
-                scale_ref_y = tile_ref.shape[0] / float(self.inference_dim)
-                in_src = cv2.resize(tile_src, (self.inference_dim, self.inference_dim), interpolation=cv2.INTER_AREA)
-                in_ref = cv2.resize(tile_ref, (self.inference_dim, self.inference_dim), interpolation=cv2.INTER_AREA)
-            else:
-                in_src = tile_src
-                in_ref = tile_ref
+                # Fast multi-scale inference: resize if tile exceeds inference_dim
+                scale_src_x, scale_src_y = 1.0, 1.0
+                scale_ref_x, scale_ref_y = 1.0, 1.0
 
-            # Process window pair through dense matcher
-            try:
-                tile_inliers, _, _ = self.matcher.match(in_src, in_ref)
-            except Exception as e:
-                logger.debug(f"Tile matching failed at ref ({win_ref.col_off}, {win_ref.row_off}): {e}")
-                tile_inliers = []
+                if self.inference_dim and (tile_src.shape[0] > self.inference_dim or tile_src.shape[1] > self.inference_dim):
+                    scale_src_x = tile_src.shape[1] / float(self.inference_dim)
+                    scale_src_y = tile_src.shape[0] / float(self.inference_dim)
+                    scale_ref_x = tile_ref.shape[1] / float(self.inference_dim)
+                    scale_ref_y = tile_ref.shape[0] / float(self.inference_dim)
+                    in_src = cv2.resize(tile_src, (self.inference_dim, self.inference_dim), interpolation=cv2.INTER_AREA)
+                    in_ref = cv2.resize(tile_ref, (self.inference_dim, self.inference_dim), interpolation=cv2.INTER_AREA)
+                else:
+                    in_src = tile_src
+                    in_ref = tile_ref
 
-            if len(tile_inliers) >= self.min_inliers_per_tile:
-                tiles_with_matches += 1
+                # Process window pair through dense matcher
+                try:
+                    tile_inliers, _, _ = self.matcher.match(in_src, in_ref)
+                except Exception as e:
+                    logger.debug(f"Tile matching failed at ref ({win_ref.col_off}, {win_ref.row_off}): {e}")
+                    tile_inliers = []
 
-                # Map local tile coordinates to global full-raster coordinates
-                for m in tile_inliers:
-                    local_src_x = m.target_xy[0] * scale_src_x
-                    local_src_y = m.target_xy[1] * scale_src_y
-                    local_ref_x = m.ref_xy[0] * scale_ref_x
-                    local_ref_y = m.ref_xy[1] * scale_ref_y
+                if len(tile_inliers) >= self.min_inliers_per_tile:
+                    tiles_with_matches += 1
 
-                    g_src_x = float(local_src_x + win_src.col_off)
-                    g_src_y = float(local_src_y + win_src.row_off)
-                    g_ref_x = float(local_ref_x + win_ref.col_off)
-                    g_ref_y = float(local_ref_y + win_ref.row_off)
+                    # Map local tile coordinates to global full-raster coordinates
+                    for m in tile_inliers:
+                        local_src_x = m.target_xy[0] * scale_src_x
+                        local_src_y = m.target_xy[1] * scale_src_y
+                        local_ref_x = m.ref_xy[0] * scale_ref_x
+                        local_ref_y = m.ref_xy[1] * scale_ref_y
 
-                    raw_global_matches.append(
-                        KeypointMatch(
-                            ref_xy=(g_ref_x, g_ref_y),
-                            target_xy=(g_src_x, g_src_y),
-                            confidence=m.confidence,
-                            residual_error=m.residual_error,
-                            subpixel_refined=m.subpixel_refined,
+                        g_src_x = float(local_src_x + win_src.col_off)
+                        g_src_y = float(local_src_y + win_src.row_off)
+                        g_ref_x = float(local_ref_x + win_ref.col_off)
+                        g_ref_y = float(local_ref_y + win_ref.row_off)
+
+                        raw_global_matches.append(
+                            KeypointMatch(
+                                ref_xy=(g_ref_x, g_ref_y),
+                                target_xy=(g_src_x, g_src_y),
+                                confidence=m.confidence,
+                                residual_error=m.residual_error,
+                                subpixel_refined=m.subpixel_refined,
+                            )
                         )
-                    )
 
-            # Explicit garbage collection to prevent memory spikes
-            del tile_ref, tile_src
-            if processed_tiles % 10 == 0:
-                gc.collect()
+                # Explicit garbage collection to prevent memory spikes
+                del tile_ref, tile_src
+                if processed_tiles % 10 == 0:
+                    gc.collect()
+        finally:
+            if open_src is not None:
+                open_src.close()
+            if open_ref is not None:
+                open_ref.close()
 
         # Step 5: Spatial Seam Deduplication & NMS across adjacent overlapping tiles
         deduped_matches = self.deduplicate_seam_tiepoints(raw_global_matches)
@@ -493,6 +505,12 @@ class PlanetaryTileProcessor:
         )
 
         elapsed = time.perf_counter() - t_start
+        peak_ram_mb = 0.0
+        try:
+            import resource
+            peak_ram_mb = float(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0)
+        except Exception:
+            pass
 
         return TileProcessingResult(
             global_inliers=global_inliers,
@@ -503,4 +521,5 @@ class PlanetaryTileProcessor:
             metrics=metrics,
             coarse_overlap=coarse_overlap,
             processing_time_s=elapsed,
+            peak_ram_mb=peak_ram_mb,
         )

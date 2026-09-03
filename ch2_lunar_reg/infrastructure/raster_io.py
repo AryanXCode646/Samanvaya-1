@@ -20,6 +20,7 @@ from rasterio.transform import Affine, from_origin
 from rasterio.control import GroundControlPoint
 
 from ch2_lunar_reg.domain.models import GeoRaster, KeypointMatch, SensorModality, SunAngles
+from lunar_core.data_io.raster_reader import sanitize_path
 
 
 class PlanetaryRasterDriver:
@@ -46,7 +47,8 @@ class PlanetaryRasterDriver:
         Reads planetary GeoTIFF with full geospatial spatial reference.
         Enforces decompression bomb prevention limits before reading.
         """
-        path_str = str(filepath)
+        clean_path = sanitize_path(filepath)
+        path_str = str(clean_path)
         with rasterio.open(path_str) as src:
             if src.width > 30000 or src.height > 30000:
                 raise ValueError(f"Raster dimensions ({src.width}x{src.height}) exceed maximum threshold (30000x30000)")
@@ -92,7 +94,8 @@ class PlanetaryRasterDriver:
         """
         Exports registered lunar image as a standard GeoTIFF.
         """
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        clean_out = sanitize_path(output_path)
+        os.makedirs(clean_out.parent, exist_ok=True)
         h, w = data.shape
         trans = updated_transform if updated_transform is not None else reference_raster.transform
         if trans is None:
@@ -110,19 +113,20 @@ class PlanetaryRasterDriver:
             "compress": "lzw",
         }
 
-        with rasterio.open(str(output_path), "w", **profile) as dst:
+        with rasterio.open(str(clean_out), "w", **profile) as dst:
             dst.write(data.astype(np.float32), 1)
 
     @staticmethod
-    def export_ground_control_points(
+    def export_isis_gcp_csv(
         matches: List[KeypointMatch],
         ref_transform: Affine,
         csv_filepath: Union[str, Path],
     ) -> None:
         """
-        Exports inlier tie points as standard Ground Control Points (GCPs) for
-        ISRO Chandrayaan-2 photogrammetric bundle adjustment and ISIS3 jigsaw.
+        Exports tie-points as a USGS ISIS3 jigsaw-compatible GCP CSV file.
         """
+        clean_csv = sanitize_path(csv_filepath)
+        os.makedirs(clean_csv.parent, exist_ok=True)
         lines = ["gcp_id,pixel_ref,line_ref,pixel_tgt,line_tgt,geo_x,geo_y,residual_px\n"]
         for idx, m in enumerate(matches):
             rx, ry = m.ref_xy
@@ -131,7 +135,7 @@ class PlanetaryRasterDriver:
             res = m.residual_error if m.residual_error is not None else 0.0
             lines.append(f"{idx},{rx:.4f},{ry:.4f},{tx:.4f},{ty:.4f},{geo_x:.6f},{geo_y:.6f},{res:.4f}\n")
 
-        with open(str(csv_filepath), "w") as f:
+        with open(str(clean_csv), "w") as f:
             f.writelines(lines)
 
     @staticmethod
@@ -144,6 +148,8 @@ class PlanetaryRasterDriver:
         Exports displacement vector field as standard GeoJSON features for QGIS / ArcGIS.
         """
         import json
+        clean_json = sanitize_path(geojson_filepath)
+        os.makedirs(clean_json.parent, exist_ok=True)
 
         features = []
         for idx, m in enumerate(matches):

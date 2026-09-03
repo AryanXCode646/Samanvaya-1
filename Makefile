@@ -11,7 +11,7 @@ help:
 	@echo "  make install  - Install dependencies and register 'samanvaya' CLI"
 	@echo "  make run      - Launch interactive Streamlit portal (port 8501)"
 	@echo "  make api      - Launch FastAPI REST backend (port 8000)"
-	@echo "  make test     - Run full 38-test automated verification suite"
+	@echo "  make test     - Run full 79-test automated verification suite"
 	@echo "  make docker   - Build and start Docker container stack"
 	@echo "  make clean    - Remove build artifacts and caches"
 	@echo "  make info     - Display system environment and mission telemetry"
@@ -42,6 +42,7 @@ info:
 	@$(PYTHON) -m lunar_core.cli info
 
 clean:
-	rm -rf build/ dist/ *.egg-info .pytest_cache/
+	rm -rf build/ dist/ *.egg-info .pytest_cache/ .coverage htmlcov/
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	find . -type f -name "*.py[cod]" -delete
+	rm -rf tests/temp_* *.tmp *.log

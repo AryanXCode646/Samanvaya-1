@@ -63,7 +63,7 @@ class PlanetaryRasterWriter:
         """
         Exports tie-points as standard Ground Control Points (GCPs) for photogrammetric bundle adjustment.
         """
-        out_path = Path(output_path)
+        out_path = sanitize_path(output_path)
         out_path.parent.mkdir(parents=True, exist_ok=True)
 
         lines = [
@@ -95,7 +95,7 @@ class PlanetaryRasterWriter:
         """
         Exports displacement vectors as standard GeoJSON features for QGIS and ArcGIS.
         """
-        out_path = Path(output_path)
+        out_path = sanitize_path(output_path)
         out_path.parent.mkdir(parents=True, exist_ok=True)
 
         features = []

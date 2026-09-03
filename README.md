@@ -10,7 +10,7 @@
 [![PyTorch 2.0+](https://img.shields.io/badge/PyTorch-2.0%2B-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org)
 [![Kornia 0.8](https://img.shields.io/badge/Kornia-0.8-10b981?style=for-the-badge)](https://kornia.readthedocs.io)
 [![GDAL / Rasterio](https://img.shields.io/badge/GDAL%20%2F%20Rasterio-1.3%2B-2563eb?style=for-the-badge&logo=qgis&logoColor=white)](https://rasterio.readthedocs.io)
-[![Tests Passing](https://img.shields.io/badge/Tests-100%25%20Passed%20(69%2F69)-emerald?style=for-the-badge&logo=pytest&logoColor=white)](https://github.com/ashishsinghbora/Samanvaya)
+[![Tests Passing](https://img.shields.io/badge/Tests-100%25%20Passed%20(79%2F79)-emerald?style=for-the-badge&logo=pytest&logoColor=white)](https://github.com/ashishsinghbora/Samanvaya)
 [![Security Hardened](https://img.shields.io/badge/Security-XXE%20%26%20Decompression%20Shielded-blueviolet?style=for-the-badge)](https://github.com/ashishsinghbora/Samanvaya)
 [![License MIT](https://img.shields.io/badge/License-MIT-f59e0b?style=for-the-badge)](LICENSE)
 
@@ -19,7 +19,7 @@
   <i>"Multi-modal, Sun angle and scale invariant image correspondence using Chandrayaan-2 optical images (OHRC, TMC and IIRS)"</i>
 </p>
 
-[**Interactive Portal (Streamlit)**](http://localhost:8501) • [**Showcase Documentation & Wiki**](https://ashishsinghbora.github.io/Samanvaya/) • [**Architecture**](#-architecture-pipeline) • [**Quickstart**](#-quickstart--installation) • [**USGS ISIS3 Integration**](#-usgs-isis3--qgis-bundle-adjustment)
+[**Interactive Portal (Streamlit)**](http://localhost:8501) • [**Showcase Documentation & Wiki**](https://ashishsinghbora.github.io/Samanvaya/) • [**Architecture**](#-architecture--clean-architecture-data-flow) • [**Quickstart**](#-quickstart--installation) • [**USGS ISIS3 Integration**](#-usgs-isis3--bundle-adjustment)
 
 </div>
 
@@ -58,43 +58,45 @@ Spaceborne optical imaging of the lunar surface presents severe photogrammetric 
 | **GSD Scale Invariance Ratio** | $< 2\times$ | $\sim 4\times$ | **Up to $320\times$ (OHRC $\to$ TMC-2 $\to$ IIRS)** | Multi-Scale Cascade | **PASSED ✅** |
 | **Out-of-Core Processing** | OOM Crash (> 10k x 10k) | OOM Crash | **Bounded Memory ($\le 4\text{ GB}$ Streaming)** | Arbitrary Swath Size | **PASSED ✅** |
 | **Photogrammetric Bundle Covariance** | None | Ad-hoc | **Continuous Inverse Hessian $\mathbf{H}^{-1}$** | USGS ISIS3 Jigsaw | **PASSED ✅** |
-| **Automated Verification Suite** | None | Partial | **69 / 69 Tests 100% Passing** | Zero Regressions | **PASSED ✅** |
+| **Automated Verification Suite** | None | Partial | **79 / 79 Tests 100% Passing** | Zero Regressions | **PASSED ✅** |
 
 ---
 
-## 🏛️ Architecture Pipeline
+## 🏛️ Architecture & Clean Architecture Data Flow
+
+Samanvaya adheres strictly to **Clean Architecture** principles, maintaining strict separation between planetary I/O (`infrastructure`), mathematical formulations (`domain`), registration workflows (`application`), and user interfaces (`interfaces`):
 
 ```mermaid
 flowchart TD
-    subgraph S1["Stage 1: Ingestion, Tile Partitioning & Photometric Normalization"]
-        A["Full-Swath Planetary GeoTIFFs (> 10k x 10k)"] --> TP["PlanetaryTileProcessor (rasterio.windows.Window)"]
-        TP --> DEM["3D DEM Facet Normal Derivation (Sobel Gradients)"]
-        DEM --> PN["Lommel-Seeliger Normalization (cos i / (cos i + cos e))"]
+    subgraph INF["1. Infrastructure Layer (Hardware, Geospatial & I/O)"]
+        TIF["Planetary GeoTIFFs (> 10k x 10k)"] --> TP["PlanetaryTileProcessor (rasterio.windows.Window)"]
+        PDS["PDS4 XML Labels"] --> SEC["DefusedXML Parser (resolve_entities=False)"]
+        SEC --> DRV["PlanetaryRasterDriver (IAU2000:30100)"]
+        TP --> DRV
     end
 
-    subgraph S2["Stage 2: Frequency-Domain Illumination Invariance"]
-        PN --> FB["Vectorized 2D Log-Gabor Wavelet Bank (O(1) Cached)"]
-        FB --> FFT["PyTorch 2D FFT & Zero-DC Filtering"]
-        FFT --> KM["Kovesi Moment Analysis (Maximum Moment M_max)"]
+    subgraph DOM["2. Domain Layer (Mathematical & Photogrammetric Physics)"]
+        DRV --> LS["Lommel-Seeliger Normalizer: cos(i) / (cos(i) + cos(e))"]
+        LS --> PC["Vectorized 2D Log-Gabor Phase Congruency (Zero-DC Bank)"]
+        PC --> SPEC["HyperspectralBandSelector (1.1 µm Continuum & PCA)"]
+        SPEC --> SUB["SubpixelSurfaceFit & Inverse Hessian Covariance"]
     end
 
-    subgraph S3["Stage 3: Multi-Modal Scale-Space & Transformer Matching"]
-        KM --> FM["Fourier-Mellin 180° Rotation & Scale Disambiguation"]
-        FM --> HB["Hierarchical Scale Bridge (OHRC 0.25m -> TMC-2 5m -> IIRS 80m)"]
-        HB --> TR["Dense LoFTR Cross-Attention Linear Transformer"]
+    subgraph APP["3. Application Layer (Registration Pipelines & Optimization)"]
+        PC --> FM["Fourier-Mellin 180° Invariant Coarse Rot/Scale Solver"]
+        FM --> CAS["IIRSCascadeBridge (OHRC 0.25m -> TMC-2 5m -> IIRS 80m)"]
+        CAS --> TR["Dense LoFTR Linear Transformer Cross-Attention"]
+        TR --> ANMS["8x8 Spatial Hash Bucketing ANMS (H = 0.986)"]
+        ANMS --> REF["Batch Parabolic Taylor Refiner (det(H) > 0, a<0, b<0)"]
+        REF --> MAG["USAC-MAGSAC++ Robust Consensus Homography"]
     end
 
-    subgraph S4["Stage 4: Spatial Lattice Allocation & Sub-Pixel Covariances"]
-        TR --> ANMS["8x8 Grid ANMS (O(N) Spatial Hash Bucketing)"]
-        ANMS --> TAY["2D Parabolic Taylor & Hessian Refiner (O(1))"]
-        TAY --> MAG["USAC-MAGSAC++ Robust Consensus Homography"]
-    end
-
-    subgraph S5["Stage 5: Diagnostics & USGS ISIS3 / GIS Production"]
-        MAG --> MET["Sub-Pixel Projective RMSE (0.283 px &lt; 0.40 px)"]
-        MAG --> ENT["Normalized Shannon Spatial Entropy (H = 0.986)"]
-        MAG --> UI["Interactive Streamlit Portal (Benchmark Presets & Wipes)"]
-        MAG --> ISIS["USGS ISIS3 Jigsaw GCP CSV (sigma_x, sigma_y, weight)"]
+    subgraph INT["4. Interfaces Layer (APIs, UI & Mission Products)"]
+        MAG --> API["FastAPI Non-Blocking Server & /ws/align Streaming WebSocket"]
+        MAG --> UI["Interactive Streamlit Portal (Benchmarks, 4-Mode Inspector)"]
+        MAG --> CLI["Unified 'samanvaya' CLI Entrypoint"]
+        MAG --> ISIS["USGS ISIS3 Jigsaw GCP CSV Exporter"]
+        MAG --> PDF["Automated ReportLab Executive PDF Mission Report"]
     end
 ```
 
@@ -118,15 +120,22 @@ $$M_{\max} = \frac{1}{2} \left(S_{xx} + S_{yy} + \sqrt{(S_{xx} - S_{yy})^2 + 4 S
 ### 3. Continuous 2D Parabolic Taylor Refinement & Hessian Covariance
 Around the integer peak, the continuous similarity surface $f(x, y)$ is modeled as a 6-parameter quadratic:
 $$f(x, y) = ax^2 + by^2 + cxy + dx + ey + f$$
-Setting $\nabla f = 0$ yields the analytical sub-pixel displacement in $O(1)$ time:
+Setting $\nabla f = 0$ yields the continuous analytical sub-pixel displacement in $O(1)$ time:
 $$\mathbf{\delta}^* = -\mathbf{H}^{-1} \mathbf{g} = \begin{bmatrix} 2a & c \\ c & 2b \end{bmatrix}^{-1} \begin{bmatrix} -d \\ -e \end{bmatrix} = \begin{bmatrix} \frac{-2bd + ce}{4ab - c^2} \\ \frac{-2ae + cd}{4ab - c^2} \end{bmatrix}$$
-Strict negative-definiteness is enforced ($\det(\mathbf{H}) = 4ab - c^2 > 0, a < 0, b < 0$). Directional measurement uncertainties for photogrammetric bundle adjustment are derived directly from the inverted Hessian:
-$$\sigma_x^2 = |(\mathbf{H}^{-1})_{0,0}| = \frac{2|b|}{4ab - c^2}, \quad \sigma_y^2 = |(\mathbf{H}^{-1})_{1,1}| = \frac{2|a|}{4ab - c^2}, \quad W = \sqrt{4ab - c^2}$$
+Strict negative-definiteness is enforced: $\det(\mathbf{H}) = 4ab - c^2 > 0$ with $a < 0$ and $b < 0$. Saddle points, ridges, and local minima are rejected ($\mathbf{\delta}^* = \mathbf{0}$). Directional measurement uncertainties for photogrammetric bundle adjustment are derived from the inverse Hessian $\mathbf{\Sigma} = -\mathbf{H}^{-1}$ and its eigenvalue decomposition:
+$$\sigma_x = \sqrt{|(\mathbf{H}^{-1})_{0,0}|} = \sqrt{\frac{2|b|}{4ab - c^2}}, \quad \sigma_y = \sqrt{|(\mathbf{H}^{-1})_{1,1}|} = \sqrt{\frac{2|a|}{4ab - c^2}}, \quad w = \frac{1}{\sqrt{\lambda_1 \lambda_2}}$$
 
 ### 4. Normalized Shannon Spatial Entropy ($H$)
 To ensure tie-points are not clustered solely on high-contrast crater rims, the scene is partitioned into an $8 \times 8$ grid ($K = 64$ cells). Shannon Entropy measures uniform spatial dispersion:
 $$H = -\frac{\sum_{k=1}^K p_k \log_2(p_k)}{\log_2(K)}, \quad p_k = \frac{n_k}{N_{\text{total}}}$$
-Samanvaya achieves $H = 0.986 \ge 0.95$, confirming well-conditioned geometry across lunar mare and shadowed regions alike.
+Samanvaya achieves $H = 0.986 \ge 0.95$, confirming well-conditioned geometry across lunar maria and shadowed regions alike.
+
+### 5. 3-Step Hyperspectral Continuum Cascade Bridge
+Resolves the extreme $320\times$ scale gap between $0.25\text{ m/px}$ OHRC and $80\text{ m/px}$ IIRS:
+$$H_{\text{OHRC}\to\text{IIRS}} = H_{\text{TMC2}\to\text{IIRS}} \cdot H_{\text{OHRC}\to\text{TMC2}}$$
+- **Step 1**: $\text{OHRC } (0.25\text{ m}) \xrightarrow{20\times} \text{TMC-2 } (5.0\text{ m})$ scale-space pyramid normalization.
+- **Step 2**: $\text{TMC-2 } (5.0\text{ m}) \xrightarrow{16\times} \text{IIRS } (80\text{ m})$ $1.1\,\mu\text{m}$ continuum albedo band matching.
+- **Step 3**: Composite georeferenced homography projection and local sub-pixel refinement.
 
 ---
 
@@ -188,21 +197,26 @@ docker compose up --build
 # Display system capabilities, GPU acceleration, and mission presets
 samanvaya info
 
-# Launch the interactive Streamlit portal with benchmark presets
+# Launch interactive Streamlit portal with 4-mode inspector and benchmark presets
 samanvaya ui --port 8501
 
-# Headless batch GeoTIFF alignment between OHRC and LRO NAC
-samanvaya align -s source_ohrc.tif -r ref_lro_nac.tif -o output/
+# Launch FastAPI REST backend with WebSocket streaming
+samanvaya api --port 8000
 
-# Execute full automated test suite (69 tests)
+# Headless batch GeoTIFF alignment with USGS ISIS3 GCP and PDF report generation
+samanvaya align -s data/source_ohrc.tif -r data/ref_lro_nac.tif -o output/
+
+# Execute full automated test suite (79 tests)
 samanvaya test
 ```
 
 ### Python SDK Example
 ```python
-from lunar_core.alignment import DenseLoFTRMatcher
+from lunar_core.alignment.dense_matcher import DenseLoFTRMatcher
 from lunar_core.data_io import PlanetaryRasterReader, PlanetaryRasterWriter
-from lunar_core.evaluation import EvaluationEngine
+from lunar_core.data_io.isis_exporter import IsisGcpExporter
+from lunar_core.evaluation.metrics import EvaluationEngine
+from lunar_core.evaluation.pdf_reporter import MissionReportGenerator
 
 # 1. Ingest Planetary GeoTIFFs (hardened against decompression bombs)
 src_raster = PlanetaryRasterReader.read_geotiff("data/ohrc_apollo11.tif")
@@ -235,39 +249,90 @@ print(f"Sub-Pixel RMSE: {report.rmse_pixels:.4f} px (ISRO Mandate Passed: {repor
 print(f"Spatial Entropy: {report.spatial_uniformity_entropy:.4f} / 1.0000")
 
 # 5. Export USGS ISIS3 Jigsaw GCP CSV with continuous Hessian covariances
-PlanetaryRasterWriter.export_gcp_csv(
+isis_exporter = IsisGcpExporter()
+isis_exporter.export_pairwise_csv(
     matches=inliers,
+    ref_raster=ref_raster,
     output_path="output/apollo11_isis3_jigsaw.csv",
-    ref_transform=ref_raster.transform,
+)
+
+# 6. Generate Executive PDF Mission Report with ISRO SIH Compliance Stamp
+pdf_reporter = MissionReportGenerator()
+pdf_reporter.generate_report(
+    metrics=report,
+    matches=inliers,
+    output_pdf_path="output/apollo11_mission_report.pdf",
+    ref_modality=ref_raster.modality,
+    target_modality=src_raster.modality,
+    ref_gsd=ref_raster.gsd_meters,
+    target_gsd=src_raster.gsd_meters,
 )
 ```
 
 ---
 
-## 🗺️ USGS ISIS3 & QGIS Bundle Adjustment
+## 🌐 FastAPI REST & WebSocket Live Streaming
 
-Samanvaya directly exports tie-points into the column format required by the United States Geological Survey (USGS) **ISIS3 `jigsaw`** photogrammetric bundle adjustment tool:
-
-```csv
-gcp_id,pixel_ref,line_ref,pixel_tgt,line_tgt,geo_x,geo_y,residual_px,confidence,sigma_x,sigma_y,cov_xy,weight
-0,45.2810,112.4390,44.9123,112.0219,23.473105,0.674201,0.2412,0.8840,0.183421,0.194820,-0.012401,3.482019
-1,189.5420,84.1020,189.1294,83.7192,23.478912,0.675104,0.1928,0.9210,0.142819,0.151902,0.008412,4.129402
+Start the API server:
+```bash
+make api
+# Or: uvicorn ch2_lunar_reg.interfaces.api:app --host 0.0.0.0 --port 8000
 ```
 
-- **Directional Standard Deviations ($\sigma_x, \sigma_y$)**: Derived from quadratic surface curvature along the principal axis.
-- **Curvature Confidence Weight ($W = \sqrt{\det(\mathbf{H})}$)**: Weights well-conditioned peaks heavily while downweighting flatter, ill-conditioned terrain.
+### Live WebSocket Streaming (`ws://localhost:8000/ws/align`)
+Connect via WebSocket to receive real-time stage progression telemetry:
+
+```python
+import asyncio
+import websockets
+import json
+
+async def stream_alignment():
+    uri = "ws://localhost:8000/ws/align"
+    async with websockets.connect(uri) as ws:
+        request = {
+            "source_path": "data/ohrc_apollo11.tif",
+            "reference_path": "data/lro_apollo11.tif",
+            "confidence_threshold": 0.20,
+        }
+        await ws.send(json.dumps(request))
+        
+        async for msg in ws:
+            event = json.loads(msg)
+            print(f"Stage: {event['stage']} | Progress: {event['progress'] * 100:.0f}% | Details: {event['message']}")
+            if event["stage"] in ("COMPLETED", "FAILED"):
+                break
+
+asyncio.run(stream_alignment())
+```
 
 ---
 
-## 📂 Repository Structure
+## 🗺️ USGS ISIS3 & Bundle Adjustment
+
+Samanvaya directly exports tie-points into the format required by the United States Geological Survey (USGS) **ISIS3 `jigsaw`** and `qnet` photogrammetric bundle adjustment tools:
+
+```csv
+PointId,PointType,RefSample,RefLine,TgtSample,TgtLine,SigmaX,SigmaY,CovXY,Weight,ResidualPx,Confidence,GeoX,GeoY
+PT_00000,Tie,45.2810,112.4390,44.9123,112.0219,0.18342,0.19482,-0.01240,3.4820,0.2412,0.8840,23.473105,0.674201
+PT_00001,Tie,189.5420,84.1020,189.1294,83.7192,0.14282,0.15190,0.00841,4.1294,0.1928,0.9210,23.478912,0.675104
+```
+
+- **Directional Uncertainties ($\sigma_x, \sigma_y$)**: Calculated directly from quadratic curvature along principal axes.
+- **Curvature Weight ($w = \frac{1}{\sqrt{\lambda_1 \lambda_2}}$)**: Downweights flat, ill-conditioned terrain while strongly weighting sharp peak matches.
+
+---
+
+## 📂 Repository Structure (Clean Architecture)
 
 ```
 Samanvaya/
 ├── lunar_core/                    # Core Clean Architecture Framework
-│   ├── data_io/                  # Hardened GeoTIFF, PDS4 XML, TileProcessor, and GCP Exporters
-│   │   ├── raster_reader.py      # DefusedXML parser & Decompression Bomb Shields
-│   │   ├── raster_writer.py      # GeoTIFF & ISIS3 Jigsaw GCP Exporter with Covariances
-│   │   └── tile_processor.py     # Out-of-Core Windowed Processing for Massive Full-Swaths
+│   ├── data_io/                  # Hardened GeoTIFF, PDS4 XML, TileProcessor & Exporters
+│   │   ├── raster_reader.py      # DefusedXML parser, Traversal & Bomb Shields
+│   │   ├── raster_writer.py      # GeoTIFF & GCP Exporter with Covariances
+│   │   ├── tile_processor.py     # Out-of-Core Windowed Processing for Massive Swaths
+│   │   └── isis_exporter.py      # USGS ISIS3 Jigsaw GCP CSV Exporter
 │   ├── preprocessing/            # Phase Congruency, Lommel-Seeliger, 3D DEM Norm & Spectral PCA
 │   │   ├── phase_congruency.py   # Cached Vectorized PyTorch/Kornia Log-Gabor Engine
 │   │   ├── photometric.py        # 3D DEM Surface Normal & Lommel-Seeliger Normalizer
@@ -281,7 +346,8 @@ Samanvaya/
 │   │   ├── anms.py               # O(N) Spatial Hashing ANMS & Shannon Entropy
 │   │   └── magsac.py             # OpenCV USAC-MAGSAC++ Consensus Estimator
 │   ├── evaluation/               # Sub-Pixel RMSE, Spatial Entropy & Visual Diagnostics
-│   │   └── metrics.py            # EvaluationEngine & Publication-Quality Scatter Plotter
+│   │   ├── metrics.py            # EvaluationEngine & Publication-Quality Scatter Plotter
+│   │   └── pdf_reporter.py       # Automated ReportLab Executive PDF Mission Report Generator
 │   ├── ui/                       # Streamlit Interactive Planetary Portal (app.py)
 │   ├── assets/sample_data/       # Bundled Real Orbital Benchmark GeoTIFFs (Apollo 11, Jackson)
 │   ├── cli.py                    # Unified 'samanvaya' CLI Entrypoint
@@ -289,9 +355,24 @@ Samanvaya/
 │
 ├── ch2_lunar_reg/                 # Domain, Application & Infrastructure Subsystems
 │   ├── domain/                   # Photometric Regolith Models, Affine/Homography Solvers
-│   ├── application/              # Scale-Space Localizer, Robust Matcher
+│   │   ├── models.py             # Pydantic v2 Core Domain Entities & KeypointMatch
+│   │   ├── phase_congruency.py   # Vectorized Frequency Grids & 4D Log-Gabor Bank
+│   │   ├── subpixel.py           # Parabolic Taylor & Hessian Covariance Solvers
+│   │   ├── spectral.py           # HyperspectralBandSelector & IIRSCascadeBridge
+│   │   ├── photometric.py        # Lommel-Seeliger & Hapke Scattering Models
+│   │   └── transformation.py     # Affine, Homography & Thin Plate Spline Solvers
+│   ├── application/              # Scale-Space Localizer, Robust Matcher & Refiner
+│   │   ├── pipeline.py           # RegistrationPipeline Orchestrator
+│   │   ├── scale_space.py        # GSD Normalizer & Fourier-Mellin Localizer
+│   │   ├── dense_matcher.py      # Feature Extraction & Transformer Matcher
+│   │   ├── spatial_allocator.py  # Grid-Based ANMS Keypoint Pruner
+│   │   └── subpixel_refiner.py   # Application Subpixel Refiner Adapter
 │   ├── infrastructure/           # Synthetic Lunar Crater Generator & PDS4 Parser
-│   └── interfaces/               # FastAPI REST Backend (api.py) & Secondary Dashboard
+│   │   ├── raster_io.py          # Geospatial Rasterio / GDAL Driver & GCP Exporter
+│   │   ├── pds4_parser.py        # XML Metadata Parser & Sun Angle Extractor
+│   │   └── synthetic_generator.py # Crater Terrain Simulator & Synthetic DEMs
+│   └── interfaces/               # FastAPI REST Backend, WebSockets & Secondary Dashboard
+│       └── api.py                # REST Endpoints, Async Worker Queue & /ws/align WebSocket
 │
 ├── docs/                          # GitHub Pages Single Source of Truth Web Portal
 │   ├── index.html                # Interactive Showcase Landing Page
@@ -301,7 +382,7 @@ Samanvaya/
 │   ├── js/                       # Interactive Simulators & Dynamic Visualizers
 │   └── assets/                   # High-Resolution Verification Visual Artifacts
 │
-├── tests/                         # Comprehensive Verification Suite (69/69 Tests Passing)
+├── tests/                         # Comprehensive Verification Suite (79/79 Tests Passing)
 │   ├── test_dense_loftr_matcher.py
 │   ├── test_evaluation_metrics.py
 │   ├── test_phase_congruency_visual.py
@@ -310,12 +391,13 @@ Samanvaya/
 │   ├── test_photometric_dem.py   # 3D DEM Slope Gradient Normalization Tests
 │   ├── test_subpixel.py          # Hessian Inverse Covariance & ISIS3 Export Tests
 │   ├── test_ui_benchmarks.py     # Bundled Orbital Presets Verification
-│   └── test_security_and_optimizations.py # XXE, Traversal & DSA Optimization Tests
+│   ├── test_security_and_optimizations.py # XXE, Traversal & DSA Optimization Tests
+│   └── test_phased_implementation_extensions.py # Phase 1-4 Verification Suite
 │
 ├── assets/                        # Hero Banner, Proof Graphic & Visual Figures
 ├── Dockerfile                     # Multi-Stage Container (GDAL + PyTorch + OpenCV)
 ├── docker-compose.yml             # Microservices Mesh (API + Streamlit UI)
-├── Makefile                       # Automation Targets (install, run, test, clean)
+├── Makefile                       # Automation Targets (install, run, api, test, clean)
 ├── install.sh                     # Standalone Zero-Dependency Installer
 ├── pyproject.toml                 # Modern Build System Configuration
 └── requirements.txt               # Locked Core Dependencies
@@ -336,35 +418,32 @@ make test
 platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
 rootdir: /home/zx0/project/program/hero
 configfile: pyproject.toml
-plugins: anyio-4.15.0, langsmith-0.12.1
-collected 69 items
+plugins: anyio-4.15.0, cov-7.1.0
+collected 79 items
 
 tests/test_dense_loftr_matcher.py::test_prepare_geotiff_arrays PASSED    [  1%]
 tests/test_dense_loftr_matcher.py::test_grid_based_anms_8x8 PASSED       [  2%]
-tests/test_dense_loftr_matcher.py::test_subpixel_taylor_2d_parabolic_refinement PASSED [  4%]
+tests/test_dense_loftr_matcher.py::test_subpixel_taylor_2d_parabolic_refinement PASSED [  3%]
 tests/test_dense_loftr_matcher.py::test_dense_loftr_end_to_end_matching_and_magsac PASSED [  5%]
-tests/test_evaluation_metrics.py::test_inlier_ratio_computation PASSED   [  7%]
-tests/test_evaluation_metrics.py::test_projective_rmse_computation PASSED [  8%]
-tests/test_evaluation_metrics.py::test_spatial_distribution_uniformity_entropy PASSED [ 10%]
-tests/test_evaluation_metrics.py::test_export_structured_json_and_scatter_plot PASSED [ 11%]
-tests/test_tile_processor.py::TestPlanetaryTileProcessor::test_processor_initialization PASSED [ 13%]
-tests/test_tile_processor.py::TestPlanetaryTileProcessor::test_window_grid_generation PASSED [ 14%]
-tests/test_tile_processor.py::TestPlanetaryTileProcessor::test_spatial_seam_deduplication PASSED [ 16%]
-tests/test_tile_processor.py::TestPlanetaryTileProcessor::test_out_of_core_processing_4096_geotiff PASSED [ 17%]
-tests/test_iirs_alignment.py::TestHyperspectralBandSelector::test_default_initialization PASSED [ 19%]
-tests/test_iirs_alignment.py::TestHyperspectralBandSelector::test_pca_structural_band_extraction PASSED [ 20%]
-tests/test_iirs_alignment.py::TestHierarchicalMultiModalBridge::test_cascade_hierarchical_alignment PASSED [ 22%]
-tests/test_photometric_dem.py::TestPhotometricNormalizerDEM::test_planar_fallback_without_dem PASSED [ 23%]
-tests/test_photometric_dem.py::TestPhotometricNormalizerDEM::test_surface_normal_derivation_physics PASSED [ 25%]
-tests/test_photometric_dem.py::TestPhotometricNormalizerDEM::test_crater_slope_burnout_prevention_at_low_sun PASSED [ 26%]
-tests/test_subpixel.py::TestCurvatureSubpixelCovariance::test_analytical_covariance_mathematics PASSED [ 28%]
-tests/test_subpixel.py::TestCurvatureSubpixelCovariance::test_gcp_csv_export_with_covariance_columns PASSED [ 29%]
-tests/test_ui_benchmarks.py::TestPlanetaryBenchmarkAssets::test_scenario_a_ohrc_apollo11_geotiff PASSED [ 30%]
-tests/test_security_and_optimizations.py::TestOptimizationAndOOP::test_phase_congruency_grid_and_filter_caching PASSED [ 32%]
-tests/test_security_and_optimizations.py::TestCybersecurityHardening::test_path_sanitization_traversal_boundary PASSED [ 33%]
-tests/test_security_and_optimizations.py::TestCybersecurityHardening::test_geotiff_decompression_bomb_rejection PASSED [ 35%]
+tests/test_evaluation_metrics.py::test_inlier_ratio_computation PASSED   [  6%]
+tests/test_evaluation_metrics.py::test_projective_rmse_computation PASSED [  7%]
+tests/test_evaluation_metrics.py::test_spatial_distribution_uniformity_entropy PASSED [  8%]
+tests/test_evaluation_metrics.py::test_export_structured_json_and_scatter_plot PASSED [ 10%]
+tests/test_phased_implementation_extensions.py::test_phase1_vectorized_frequency_grids_and_filter_bank PASSED [ 11%]
+tests/test_phased_implementation_extensions.py::test_phase1_subpixel_quadratic_taylor_and_hessian_eigenvalues PASSED [ 12%]
+tests/test_phased_implementation_extensions.py::test_phase1_subpixel_rejects_saddles_and_minima PASSED [ 13%]
+tests/test_phased_implementation_extensions.py::test_phase1_subpixel_batch_vectorized PASSED [ 15%]
+tests/test_phased_implementation_extensions.py::test_phase2_hyperspectral_continuum_extraction PASSED [ 16%]
+tests/test_phased_implementation_extensions.py::test_phase2_iirs_cascade_bridge_320x_gap PASSED [ 17%]
+tests/test_phased_implementation_extensions.py::test_phase2_websocket_streaming_endpoint PASSED [ 18%]
+tests/test_phased_implementation_extensions.py::test_phase3_usgs_isis3_gcp_csv_exporter PASSED [ 20%]
+tests/test_phased_implementation_extensions.py::test_phase3_automated_pdf_mission_report_generator PASSED [ 21%]
+tests/test_phased_implementation_extensions.py::test_phase4_security_uri_sanitization_and_xxe_protection PASSED [ 22%]
+tests/test_tile_processor.py::TestPlanetaryTileProcessor::test_out_of_core_processing_4096_geotiff PASSED [ 65%]
 ...
-================== 69 passed, 3 warnings in 74.61s (0:01:14) ===================
+ch2_lunar_reg/tests/test_transformation.py::test_affine_solver_accuracy PASSED [100%]
+
+======================= 79 passed, 4 warnings in 58.02s ========================
 ```
 
 ---
