@@ -37,6 +37,7 @@ setup(
         "pydantic>=2.0.0",
         "fastapi>=0.100.0",
         "uvicorn>=0.22.0",
+        "defusedxml>=0.7.1",
     ],
     entry_points={
         "console_scripts": [

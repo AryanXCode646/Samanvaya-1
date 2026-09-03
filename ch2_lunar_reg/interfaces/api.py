@@ -54,7 +54,15 @@ class SimulateBenchmarkRequest(BaseModel):
     transformation_model: TransformationModel = TransformationModel.AFFINE
 
 
+MAX_B64_PAYLOAD_BYTES = 50 * 1024 * 1024  # 50 MiB payload limit
+
+
 def b64_to_cv2(b64_str: str) -> np.ndarray:
+    if len(b64_str) > MAX_B64_PAYLOAD_BYTES * 4 // 3 + 1024:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="Payload size exceeds 50MB ceiling",
+        )
     try:
         raw = base64.b64decode(b64_str)
         arr = np.frombuffer(raw, dtype=np.uint8)
@@ -62,6 +70,8 @@ def b64_to_cv2(b64_str: str) -> np.ndarray:
         if img is None:
             raise ValueError("Failed to decode image buffer")
         return img
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid image encoding: {str(e)}")
 

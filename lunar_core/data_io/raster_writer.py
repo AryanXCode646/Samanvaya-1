@@ -13,6 +13,7 @@ import rasterio
 from rasterio.transform import Affine, from_origin
 
 from lunar_core.models import GeoRaster, KeypointMatch
+from lunar_core.data_io.raster_reader import sanitize_path
 
 
 class PlanetaryRasterWriter:
@@ -30,7 +31,7 @@ class PlanetaryRasterWriter:
         """
         Exports registered raster as a standard Moon IAU 2000 GeoTIFF.
         """
-        out_path = Path(output_path)
+        out_path = sanitize_path(output_path)
         out_path.parent.mkdir(parents=True, exist_ok=True)
         h, w = data.shape[:2]
 

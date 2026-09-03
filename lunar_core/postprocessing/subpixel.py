@@ -4,6 +4,7 @@ Sub-Pixel Peak Estimator via Analytical 2D Bivariate Quadratic Patches.
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
 import cv2
@@ -43,7 +44,30 @@ class SubpixelSurfaceFit:
         )
 
 
-class AnalyticalSubpixelRefiner:
+class SubpixelRefinerBase(ABC):
+    """
+    Abstract Base Class for sub-pixel keypoint refinement.
+    Defines unified contract for continuous surface fitting and batch refinement.
+    """
+
+    @abstractmethod
+    def fit_surface(self, patch_3x3: np.ndarray) -> Optional[SubpixelSurfaceFit]:
+        """Fits continuous bivariate surface over a 3x3 similarity patch."""
+        pass
+
+    @abstractmethod
+    def refine_matches_batch(
+        self,
+        matches: List[KeypointMatch],
+        ref_moment: np.ndarray,
+        tgt_moment: np.ndarray,
+        patch_radius: int = 8,
+    ) -> List[KeypointMatch]:
+        """Refines a batch of keypoint correspondences to sub-pixel accuracy."""
+        pass
+
+
+class ParabolicHessianRefiner(SubpixelRefinerBase):
     r"""
     Fits an analytical 2D quadratic patch:
         f(x, y) = a * x^2 + b * y^2 + c * x * y + d * x + e * y + f
@@ -60,6 +84,9 @@ class AnalyticalSubpixelRefiner:
         weight = sqrt(4*a*b - c^2)
     Achieves target RMSE < 0.40 pixels.
     """
+
+    def fit_surface(self, patch_3x3: np.ndarray) -> Optional[SubpixelSurfaceFit]:
+        return self.fit_quadratic_surface(patch_3x3)
 
     @staticmethod
     def fit_quadratic_surface(patch_3x3: np.ndarray) -> Optional[SubpixelSurfaceFit]:
@@ -216,4 +243,20 @@ class AnalyticalSubpixelRefiner:
             refined.append(m)
 
         return refined
+
+
+class AnalyticalTaylorRefiner(ParabolicHessianRefiner):
+    """
+    Taylor-series sub-pixel continuous peak estimator:
+    R(x_0 + delta) ~ R(x_0) + g^T * delta + 0.5 * delta^T * H * delta
+    Stationary point: delta* = -H^{-1} * g.
+    """
+    pass
+
+
+class AnalyticalSubpixelRefiner(ParabolicHessianRefiner):
+    """
+    Backward-compatible alias for existing pipelines and unit tests.
+    """
+    pass
 

@@ -23,7 +23,8 @@ dependencies = [
     "uvicorn>=0.22",
     "streamlit>=1.25",
     "matplotlib>=3.7",
-    "tifffile>=2023.7"
+    "tifffile>=2023.7",
+    "defusedxml>=0.7.1"
 ]
 
 [project.optional-dependencies]

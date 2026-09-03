@@ -44,9 +44,16 @@ class PlanetaryRasterDriver:
     ) -> GeoRaster:
         """
         Reads planetary GeoTIFF with full geospatial spatial reference.
+        Enforces decompression bomb prevention limits before reading.
         """
         path_str = str(filepath)
         with rasterio.open(path_str) as src:
+            if src.width > 30000 or src.height > 30000:
+                raise ValueError(f"Raster dimensions ({src.width}x{src.height}) exceed maximum threshold (30000x30000)")
+            itemsize = np.dtype(src.dtypes[0]).itemsize if src.dtypes else 4
+            if src.width * src.height * src.count * itemsize > 4 * 1024**3:
+                raise MemoryError("Raster buffer exceeds 4GB safety limit")
+
             data = src.read(1).astype(np.float32)
             transform = src.transform
             crs_str = src.crs.to_string() if src.crs else cls.LUNAR_CRS_WKT
