@@ -117,7 +117,7 @@ Reprojection residuals across verified inlier tie points, with displacement erro
 
 ## 🔬 The 4 Computer Science Pillars
 
-### 1. Data Structures & Algorithms (DSA)
+### 1. Data Structures, Algorithms (DSA) & OOP
 - **2D Fast Fourier Transform ($O(N \log N)$)**: Multi-scale frequency domain convolution executing in a single vectorized PyTorch tensor operation.
 - **Log-Polar Fourier-Mellin Transform**: Converts spatial Cartesian scaling and rotation into linear translational shifts in log-polar frequency space. Resolves the inherent $180^\circ$ centrosymmetric Fourier magnitude ambiguity via spatial phase correlation.
 - **Grid-Based ANMS ($O(N)$ Spatial Hashing)**: Partitions the frame into an $8 \times 8$ grid ($K = 64$ cells). Bucket-sorts correspondences by confidence and caps density per cell, achieving near-perfect spatial distribution ($H_{\text{spatial}} = 0.986$).
@@ -125,6 +125,8 @@ Reprojection residuals across verified inlier tie points, with displacement erro
   $$\mathbf{\delta}^* = -\mathbf{H}^{-1} \mathbf{g} = \begin{bmatrix} \frac{-2bd + ce}{4ab - c^2} \\ \frac{-2ae + cd}{4ab - c^2} \end{bmatrix}$$
   Validates negative-definite Hessian ($a < 0, b < 0, 4ab - c^2 > 0$) to refine tie-points to sub-pixel accuracy.
 - **USAC-MAGSAC++ Consensus**: Sequential probability hypothesis generation and Marginalized Sample Consensus for robust homography estimation.
+- **LRU Cache & Priority Queues (Min-Heap)**: Custom O(1) Hash Map + Doubly Linked List caching for telemetry memoization, and Min-Heaps for top-K severity tracking in AI anomaly detection.
+- **Polymorphic ML Architecture (OOP)**: Python Abstract Base Classes (ABC) and encapsulated inheritance establishing contracts for extensible telemetry detectors.
 
 ### 2. Cybersecurity & System Hardening
 - **XXE (XML External Entity) Mitigation**: Hardened PDS4 planetary XML label parsing disabling DTD entity expansion, preventing arbitrary local file disclosures.

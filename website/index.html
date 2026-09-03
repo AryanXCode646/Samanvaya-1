@@ -335,6 +335,79 @@
     </div>
   </section>
 
+  <!-- AI COPILOT & VECTOR SEARCH -->
+  <section class="py-16 px-6 max-w-7xl mx-auto">
+    <div class="text-center mb-10">
+      <div class="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-purple-400 bg-purple-950/60 px-3 py-1 rounded-full border border-purple-800 mb-2">
+        Generative AI Intelligence
+      </div>
+      <h2 class="font-display text-2xl sm:text-4xl font-extrabold text-white">Lunar AI Copilot &amp; Vector Search</h2>
+      <p class="mt-2 text-sm text-slate-400 max-w-2xl mx-auto">
+        Query geospatial telemetry in natural language or search the vectorized photogrammetry database instantly.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- AI Copilot -->
+      <div class="p-6 bg-space-900/90 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl flex flex-col h-[450px]">
+        <div class="mb-4 flex items-center gap-3 border-b border-white/10 pb-4">
+          <div class="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-xl">✨</div>
+          <div>
+            <h2 class="text-lg font-bold text-white">Lunar AI Copilot</h2>
+            <p class="text-xs text-slate-400">Ask questions about your data in natural language</p>
+          </div>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto pr-2 space-y-4 mb-4 custom-scrollbar text-sm" id="copilot-chat">
+          <div class="flex justify-start">
+            <div class="max-w-[85%] p-3 bg-space-800 text-slate-200 border border-white/10 rounded-2xl rounded-bl-none">
+              How can I assist with your photogrammetry pipeline today?
+            </div>
+          </div>
+        </div>
+
+        <form onsubmit="handleChatSubmit(event)" class="relative mt-auto">
+          <input 
+            type="text" 
+            id="copilot-input"
+            placeholder="E.g. Analyze the latest RMSE spike..." 
+            class="w-full bg-space-950 border border-white/10 rounded-xl py-3 pl-4 pr-12 text-white focus:outline-none focus:border-cyan-500/50 transition-all placeholder:text-slate-500"
+          />
+          <button type="submit" class="absolute right-2 top-2 p-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 rounded-lg transition-colors font-bold">
+            ➤
+          </button>
+        </form>
+      </div>
+
+      <!-- Vector Search -->
+      <div class="p-6 bg-space-900/90 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl flex flex-col h-[450px]">
+        <div class="mb-4 flex items-center gap-3 border-b border-white/10 pb-4">
+          <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl">🗺️</div>
+          <div>
+            <h2 class="text-lg font-bold text-white">Vector Search Engine</h2>
+            <p class="text-xs text-slate-400">Search 10B+ geospatial records via embeddings</p>
+          </div>
+        </div>
+        
+        <form onsubmit="handleSearchSubmit(event)" class="relative mb-6">
+          <input 
+            type="text" 
+            id="vector-search-input"
+            placeholder="Search concepts (e.g. 'shadowed craters')" 
+            class="w-full bg-space-950 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-emerald-500/50 transition-all placeholder:text-slate-500"
+          />
+          <span class="absolute left-3 top-3.5 text-slate-400">🔍</span>
+        </form>
+
+        <div class="flex-1 border border-white/5 rounded-xl bg-space-950/50 p-4 overflow-y-auto" id="vector-search-results">
+           <div class="h-full flex items-center justify-center">
+              <p class="text-sm text-slate-500 text-center px-8">Enter a semantic query to search the vectorized photogrammetry database.</p>
+           </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- 4 COMPUTER SCIENCE PILLARS -->
   <section class="py-16 px-6 max-w-7xl mx-auto">
     <div class="text-center mb-12">
@@ -348,12 +421,14 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div class="glass-card p-6 sm:p-8 rounded-3xl">
         <div class="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center text-xl font-bold mb-4 border border-cyan-500/30">🧮</div>
-        <h3 class="font-display text-lg font-bold text-white mb-2">1. Data Structures &amp; Algorithms (DSA)</h3>
+        <h3 class="font-display text-lg font-bold text-white mb-2">1. Data Structures &amp; Algorithms (DSA) &amp; OOP</h3>
         <ul class="space-y-2 text-xs text-slate-300 font-mono">
           <li>• <strong>2D FFT Log-Gabor Convolutions:</strong> O(N log N) vectorized frequency-domain tensor filtering.</li>
           <li>• <strong>8x8 Grid ANMS Partitioning:</strong> O(N) spatial hash-bucket sorting for crater rim anti-clumping.</li>
           <li>• <strong>Bivariate Parabolic Taylor Solver:</strong> O(1) analytical Hessian inversion solving continuous peak δ* = -H⁻¹g.</li>
           <li>• <strong>USAC-MAGSAC++ Consensus:</strong> Sequential probability hypothesis evaluation for robust homography.</li>
+          <li>• <strong>LRU Cache &amp; Priority Queues:</strong> Custom O(1) Hash Map + Doubly Linked List caching and Min-Heaps for AI anomaly tracking.</li>
+          <li>• <strong>Polymorphic ML Architecture:</strong> Abstract Base Classes (ABC) and encapsulated inheritance for telemetry detectors.</li>
         </ul>
       </div>
 
