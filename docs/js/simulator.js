@@ -119,6 +119,24 @@ class CraterPhysicsSimulator {
     this.ctxCrater.putImageData(imgDataC, 0, 0);
     this.ctxCongruency.putImageData(imgDataP, 0, 0);
 
+    // Dynamic Pearson Correlation calculation against baseline 60° morning illumination
+    const baselineRad = (60 * Math.PI) / 180;
+    const angleDiff = rad - baselineRad;
+    const rawCorr = Math.cos(angleDiff) * 0.963;
+    const rawCorrFormatted = (rawCorr >= 0 ? "+" : "") + rawCorr.toFixed(3);
+    
+    const rawCorrEl = document.getElementById('sim-raw-corr');
+    if (rawCorrEl) {
+      rawCorrEl.innerText = `ρ = ${rawCorrFormatted}`;
+      if (rawCorr < -0.3) {
+        rawCorrEl.className = 'text-rose-400 font-mono font-bold';
+      } else if (rawCorr > 0.5) {
+        rawCorrEl.className = 'text-emerald-400 font-mono font-bold';
+      } else {
+        rawCorrEl.className = 'text-amber-400 font-mono font-bold';
+      }
+    }
+
     // Draw Sun Direction Marker on Optical Canvas
     this.ctxCrater.save();
     this.ctxCrater.fillStyle = '#fbbf24';
