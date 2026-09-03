@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project Wikipedia &amp; Knowledge Base — Samanvaya (समान्वय)</title>
+  <meta name="description" content="Comprehensive technical encyclopedia and manual for Samanvaya: ISRO Chandrayaan-2 optical registration framework (SIH PS 26166)." />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Inter"', 'sans-serif'],
+            display: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            space: {
+              950: '#030712',
+              900: '#070b16',
+              850: '#0d1324',
+              800: '#131b31',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-space-950 text-slate-100 min-h-screen flex flex-col">
+
+  <!-- TOP HEADER -->
+  <header class="sticky top-0 z-50 glass-card border-b border-white/10 px-6 py-3.5">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <a href="index.html" class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center font-bold text-lg shadow-md shadow-cyan-500/20">
+          🌙
+        </div>
+        <div>
+          <span class="font-display text-base font-bold text-white tracking-tight">SAMANVAYA</span>
+          <span class="text-[10px] font-mono text-cyan-400 block uppercase">Project Wikipedia</span>
+        </div>
+      </a>
+
+      <nav class="hidden md:flex items-center gap-7 text-xs font-medium text-slate-300">
+        <a href="index.html" class="nav-link hover:text-cyan-400 transition-colors">Overview</a>
+        <a href="wiki.html" class="nav-link text-cyan-400 font-bold transition-colors">Wikipedia</a>
+        <a href="benchmarks.html" class="nav-link hover:text-cyan-400 transition-colors">Benchmarks</a>
+        <a href="http://localhost:8501" target="_blank" class="hover:text-cyan-400 transition-colors flex items-center gap-1">
+          <span>Web Portal</span>
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+        </a>
+      </nav>
+
+      <div class="flex items-center gap-3">
+        <a href="https://github.com/ashishsinghbora/Samanvaya" target="_blank" class="px-3 py-1.5 rounded-lg bg-space-850 hover:bg-space-800 text-xs font-mono text-slate-300 border border-white/10 flex items-center gap-2">
+          <span>GitHub</span>
+          <span class="px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-400 text-[10px]">v1.0.0</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- WIKIPEDIA HERO TITLE -->
+  <div class="border-b border-white/5 bg-space-900/60 py-8 px-6">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div>
+        <div class="text-[11px] font-mono uppercase tracking-wider text-cyan-400 mb-1">Official Documentation &amp; Technical Encyclopedia</div>
+        <h1 class="font-display text-2xl sm:text-3xl font-extrabold text-white">Samanvaya Project Wikipedia</h1>
+      </div>
+      <div class="flex items-center gap-2">
+        <a href="http://localhost:8501" target="_blank" class="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-bold font-mono transition-all">
+          🚀 Run Interactive Portal
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- WIKIPEDIA MAIN INTERFACE -->
+  <div class="flex-1 max-w-7xl w-full mx-auto p-6 flex flex-col lg:flex-row gap-8">
+    
+    <!-- LEFT SIDEBAR: Search & Navigation -->
+    <aside class="w-full lg:w-72 shrink-0">
+      <div class="glass-card p-5 rounded-2xl sticky top-24">
+        <!-- Search bar -->
+        <div class="relative mb-5">
+          <input type="text" id="wiki-search-input" placeholder="Search documentation..." class="w-full bg-space-850 border border-white/10 rounded-xl px-3.5 py-2 text-xs font-mono text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-400 transition-colors" />
+          <span class="absolute right-3 top-2 text-xs text-slate-500">🔍</span>
+        </div>
+
+        <div class="text-[10px] font-mono uppercase tracking-wider text-slate-400 mb-2 px-1">Articles</div>
+        <nav class="space-y-1 text-xs">
+          <a href="#overview" class="wiki-nav-btn w-full text-left px-3 py-2 rounded-lg text-slate-400 hover:text-white flex items-center justify-between transition-colors" data-target="overview">
+            <span>1. What is Samanvaya?</span>
+            <span class="text-[10px] font-mono text-slate-500">Intro</span>
+          </a>
+          <a href="#why" class="wiki-nav-btn w-full text-left px-3 py-2 rounded-lg text-slate-400 hover:text-white flex items-center justify-between transition-colors" data-target="why">
+            <span>2. Why Build This?</span>
+            <span class="text-[10px] font-mono text-slate-500">Physics</span>
+          </a>
+          <a href="#algorithms" class="wiki-nav-btn w-full text-left px-3 py-2 rounded-lg text-slate-400 hover:text-white flex items-center justify-between transition-colors" data-target="algorithms">
+            <span>3. Mathematics &amp; Algorithms</span>
+            <span class="text-[10px] font-mono text-slate-500">Theory</span>
+          </a>
+          <a href="#who" class="wiki-nav-btn w-full text-left px-3 py-2 rounded-lg text-slate-400 hover:text-white flex items-center justify-between transition-colors" data-target="who">
+            <span>4. Who Can Use This?</span>
+            <span class="text-[10px] font-mono text-slate-500">Personas</span>
+          </a>
+          <a href="#manual" class="wiki-nav-btn w-full text-left px-3 py-2 rounded-lg text-slate-400 hover:text-white flex items-center justify-between transition-colors" data-target="manual">
+            <span>5. Complete User Guide</span>
+            <span class="text-[10px] font-mono text-slate-500">Manual</span>
+          </a>
+          <a href="#telemetry" class="wiki-nav-btn w-full text-left px-3 py-2 rounded-lg text-slate-400 hover:text-white flex items-center justify-between transition-colors" data-target="telemetry">
+            <span>6. Sensor Specs &amp; Telemetry</span>
+            <span class="text-[10px] font-mono text-slate-500">Data</span>
+          </a>
+          <a href="#faq" class="wiki-nav-btn w-full text-left px-3 py-2 rounded-lg text-slate-400 hover:text-white flex items-center justify-between transition-colors" data-target="faq">
+            <span>7. Frequently Asked Questions</span>
+            <span class="text-[10px] font-mono text-slate-500">FAQ</span>
+          </a>
+        </nav>
+      </div>
+    </aside>
+
+    <!-- RIGHT ARTICLE CONTAINER -->
+    <main class="flex-1 glass-card p-8 sm:p-12 rounded-3xl min-h-[650px] overflow-y-auto" id="wiki-content">
+
+      <!-- ARTICLE 1: WHAT IS SAMANVAYA -->
+      <article id="art-overview" class="wiki-article space-y-6">
+        <div class="border-b border-white/10 pb-4">
+          <span class="text-xs font-mono text-cyan-400 uppercase tracking-wider">Article 1 • Overview</span>
+          <h2 class="font-display text-2xl sm:text-3xl font-extrabold text-white mt-1">What is Samanvaya (समान्वय)?</h2>
+        </div>
+
+        <p class="text-sm text-slate-300 leading-relaxed">
+          <strong>Samanvaya</strong> is a production-grade planetary image registration and tie-point correspondence engine. It resolves <strong>Smart India Hackathon (SIH) Problem Statement 26166</strong> formulated by the <strong>Indian Space Research Organisation (ISRO)</strong>:
+        </p>
+
+        <div class="p-4 rounded-xl bg-space-900 border-l-4 border-l-cyan-500 text-xs text-slate-200 font-mono italic">
+          "Multi-modal, Sun angle and scale invariant image correspondence using Chandrayaan-2 optical images (OHRC, TMC and IIRS)."
+        </div>
+
+        <h3 class="font-display text-lg font-bold text-white mt-6">The Real-World Lunar Photogrammetry Problem</h3>
+        <p class="text-sm text-slate-300 leading-relaxed">
+          The Moon has no atmosphere, meaning sunlight creates intense contrasts: razor-sharp, pitch-black shadows with zero ambient diffusion.
+          When Chandrayaan-2 flies over the same crater during different orbital passes, the solar elevation and azimuth change drastically:
+        </p>
+        <ul class="list-disc list-inside space-y-2 text-xs text-slate-300">
+          <li><strong>Morning Sun (Azimuth 60°):</strong> Shadows fall West, illuminating Eastern rim walls.</li>
+          <li><strong>Afternoon Sun (Azimuth 240°):</strong> Shadows fall East, illuminating Western rim walls.</li>
+          <li><strong>Extreme Scale Gaps:</strong> OHRC has a Ground Sampling Distance of ~0.25 m/pixel, while TMC-2 is 5.0 m/pixel (a 20× difference), and IIRS is 80 m/pixel (a 320× difference).</li>
+        </ul>
+
+        <div class="p-5 rounded-2xl bg-space-900 border border-white/5 mt-4">
+          <div class="text-xs font-bold text-cyan-400 font-mono uppercase mb-1">What Samanvaya Delivers</div>
+          <p class="text-xs text-slate-300">
+            Samanvaya achieves sub-pixel alignment error (<strong class="text-emerald-400 font-mono">RMSE &lt; 0.40 px</strong>) across 180° shadow inversions by isolating illumination-invariant wave frequency step edges rather than raw intensities.
+          </p>
+        </div>
+      </article>
+
+      <!-- ARTICLE 2: WHY DID WE BUILD THIS -->
+      <article id="art-why" class="wiki-article space-y-6 hidden">
+        <div class="border-b border-white/10 pb-4">
+          <span class="text-xs font-mono text-cyan-400 uppercase tracking-wider">Article 2 • Physics &amp; Failure Modes</span>
+          <h2 class="font-display text-2xl sm:text-3xl font-extrabold text-white mt-1">Why Did We Build This? (Classical CV Failures)</h2>
+        </div>
+
+        <p class="text-sm text-slate-300 leading-relaxed">
+          Standard computer vision algorithms like <strong>SIFT</strong>, <strong>ORB</strong>, <strong>SURF</strong>, and <strong>Normalized Cross Correlation (NCC)</strong> fail catastrophically on lunar orbital imagery.
+        </p>
+
+        <div class="space-y-4 my-4">
+          <div class="p-4 rounded-xl bg-space-900 border border-rose-500/20">
+            <h4 class="text-xs font-mono text-rose-400 font-bold uppercase mb-1">1. Gradient Inversion (∇I Anti-Correlation)</h4>
+            <p class="text-xs text-slate-300">
+              SIFT and ORB descriptors rely on local image intensity gradients. When solar shadows flip 180°, the gradient vectors point in exact opposite directions. Raw pixel intensity correlation is <strong>ρ = -0.9627</strong>, making descriptor matching statistically impossible.
+            </p>
+          </div>
+
+          <div class="p-4 rounded-xl bg-space-900 border border-rose-500/20">
+            <h4 class="text-xs font-mono text-rose-400 font-bold uppercase mb-1">2. Non-Lambertian Lunar Regolith</h4>
+            <p class="text-xs text-slate-300">
+              Terrestrial vision assumes Lambertian diffuse scattering. Lunar particulate regolith dust exhibits severe retro-reflective backscattering described by the Lommel-Seeliger law, introducing nonlinear non-uniform brightness across orbital swaths.
+            </p>
+          </div>
+
+          <div class="p-4 rounded-xl bg-space-900 border border-rose-500/20">
+            <h4 class="text-xs font-mono text-rose-400 font-bold uppercase mb-1">3. The 20× Scale Octave Breakdown</h4>
+            <p class="text-xs text-slate-300">
+              Classical Gaussian scale spaces can only bridge up to 1.5×–2.0× scale ratios before keypoint descriptors diverge. OHRC (0.25m) vs TMC-2 (5.0m) requires a robust decimation and deep transformer feature extractor.
+            </p>
+          </div>
+        </div>
+      </article>
+
+      <!-- ARTICLE 3: MATHEMATICS & ALGORITHMS -->
+      <article id="art-algorithms" class="wiki-article space-y-6 hidden">
+        <div class="border-b border-white/10 pb-4">
+          <span class="text-xs font-mono text-cyan-400 uppercase tracking-wider">Article 3 • Rigorous Theory</span>
+          <h2 class="font-display text-2xl sm:text-3xl font-extrabold text-white mt-1">Mathematical Formulation &amp; Core Algorithms</h2>
+        </div>
+
+        <div class="space-y-4 text-xs text-slate-300">
+          <div>
+            <h4 class="text-sm font-bold text-white mb-1">1. Lommel-Seeliger Scattering Model</h4>
+            <pre class="bg-space-900 p-3 rounded-xl border border-white/5 text-amber-300 font-mono"><code>R_LS(i, e) = cos(i) / ( cos(i) + cos(e) )</code></pre>
+            <p class="text-slate-400 mt-1">Removes first-order solar illumination gradients caused by steep incidence angles <code>i</code> and emission angles <code>e</code>.</p>
+          </div>
+
+          <div>
+            <h4 class="text-sm font-bold text-white mb-1">2. 2D Log-Gabor Zero-DC Phase Congruency</h4>
+            <pre class="bg-space-900 p-3 rounded-xl border border-white/5 text-cyan-300 font-mono"><code>G(r, θ) = exp( -[ln(r/f₀)]² / 2[ln(σ_f)]² ) · exp( -[Δθ]² / 2σ_θ² )</code></pre>
+            <p class="text-slate-400 mt-1">Because G(0, θ) = 0, the filter bank has zero DC response, making it completely invariant to absolute lighting brightness and contrast reversals.</p>
+          </div>
+
+          <div>
+            <h4 class="text-sm font-bold text-white mb-1">3. 2D Parabolic Taylor Sub-Pixel Optimization</h4>
+            <pre class="bg-space-900 p-3 rounded-xl border border-white/5 text-emerald-300 font-mono"><code>f(x, y) = a·x² + b·y² + c·x·y + d·x + e·y + f
+Hessian H = [[2a, c], [c, 2b]],  Gradient g = [d, e]ᵀ
+Continuous Peak: δ* = -H⁻¹·g = [ (-2bd + ce)/(4ab - c²), (-2ae + cd)/(4ab - c²) ]ᵀ</code></pre>
+            <p class="text-slate-400 mt-1">Solves the continuous maximum point with sub-pixel accuracy below 0.40 px.</p>
+          </div>
+        </div>
+      </article>
+
+      <!-- ARTICLE 4: WHO CAN USE THIS -->
+      <article id="art-who" class="wiki-article space-y-6 hidden">
+        <div class="border-b border-white/10 pb-4">
+          <span class="text-xs font-mono text-cyan-400 uppercase tracking-wider">Article 4 • Applications</span>
+          <h2 class="font-display text-2xl sm:text-3xl font-extrabold text-white mt-1">Who Can Use Samanvaya?</h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <div class="p-4 rounded-xl bg-space-900 border border-white/5">
+            <h4 class="font-bold text-white text-sm mb-1">🛰️ Planetary Scientists &amp; Space Agencies</h4>
+            <p class="text-slate-400">Automated co-registration of orbital swathes for global basemaps (Chandrayaan-2, Artemis, LRO, Chang'e).</p>
+          </div>
+          <div class="p-4 rounded-xl bg-space-900 border border-white/5">
+            <h4 class="font-bold text-white text-sm mb-1">🚀 Autonomous Lunar Landers (TRN)</h4>
+            <p class="text-slate-400">Terrain Relative Navigation: real-time matching of descent camera frames against onboard DEMs in &lt; 50ms.</p>
+          </div>
+          <div class="p-4 rounded-xl bg-space-900 border border-white/5">
+            <h4 class="font-bold text-white text-sm mb-1">🗺️ GIS Cartographers</h4>
+            <p class="text-slate-400">Export verified Ground Control Points (GCPs) for USGS ISIS3 Jigsaw, QGIS, and ArcGIS Pro bundle adjustment.</p>
+          </div>
+          <div class="p-4 rounded-xl bg-space-900 border border-white/5">
+            <h4 class="font-bold text-white text-sm mb-1">🌍 Earth Remote Sensing &amp; Defense</h4>
+            <p class="text-slate-400">Cross-season satellite image alignment over mountainous terrain where low winter sun angles create severe shadows.</p>
+          </div>
+        </div>
+      </article>
+
+      <!-- ARTICLE 5: USER MANUAL -->
+      <article id="art-manual" class="wiki-article space-y-6 hidden">
+        <div class="border-b border-white/10 pb-4">
+          <span class="text-xs font-mono text-cyan-400 uppercase tracking-wider">Article 5 • User Manual</span>
+          <h2 class="font-display text-2xl sm:text-3xl font-extrabold text-white mt-1">Complete Step-by-Step User Manual</h2>
+        </div>
+
+        <div class="space-y-4 text-xs text-slate-300 font-mono">
+          <div class="p-4 rounded-xl bg-space-900 border border-white/5">
+            <div class="text-cyan-400 font-bold mb-1">1. Launch the Interactive Web Portal</div>
+            <pre class="bg-space-950 p-2.5 rounded-lg text-slate-300"><code>make run
+# Or: samanvaya ui --port 8501</code></pre>
+            <p class="text-slate-400 mt-2 font-sans">Open http://localhost:8501. Use the demonstration pair or upload real GeoTIFFs, then click 'Execute Multi-Modal Alignment Pipeline'.</p>
+          </div>
+
+          <div class="p-4 rounded-xl bg-space-900 border border-white/5">
+            <div class="text-cyan-400 font-bold mb-1">2. Run Headless CLI Alignment</div>
+            <pre class="bg-space-950 p-2.5 rounded-lg text-slate-300"><code>samanvaya align -s source_ohrc.tif -r ref_lro.tif -o output/</code></pre>
+            <p class="text-slate-400 mt-2 font-sans">Performs headless alignment and exports registered GeoTIFF, structured JSON evaluation report, and residual scatter plot.</p>
+          </div>
+
+          <div class="p-4 rounded-xl bg-space-900 border border-white/5">
+            <div class="text-cyan-400 font-bold mb-1">3. Run Automated Tests</div>
+            <pre class="bg-space-950 p-2.5 rounded-lg text-slate-300"><code>make test
+# Or: samanvaya test</code></pre>
+            <p class="text-slate-400 mt-2 font-sans">Executes all 38 unit and integration tests across the repository.</p>
+          </div>
+        </div>
+      </article>
+
+      <!-- ARTICLE 6: SENSOR SPECS & TELEMETRY -->
+      <article id="art-telemetry" class="wiki-article space-y-6 hidden">
+        <div class="border-b border-white/10 pb-4">
+          <span class="text-xs font-mono text-cyan-400 uppercase tracking-wider">Article 6 • Telemetry</span>
+          <h2 class="font-display text-2xl sm:text-3xl font-extrabold text-white mt-1">Planetary Sensor Specifications</h2>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left font-mono text-slate-300">
+            <thead class="bg-space-900 text-cyan-400 uppercase border-b border-white/10">
+              <tr>
+                <th class="p-3">Sensor</th>
+                <th class="p-3">GSD Resolution</th>
+                <th class="p-3">Spectral Range</th>
+                <th class="p-3">Swath Width</th>
+                <th class="p-3">Role in Samanvaya</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5">
+              <tr><td class="p-3 font-bold text-white">OHRC</td><td class="p-3 text-emerald-400">0.25 m/px</td><td class="p-3">450 - 900 nm</td><td class="p-3">3.0 km (at 100 km)</td><td class="p-3">Ultra-high resolution source</td></tr>
+              <tr><td class="p-3 font-bold text-white">TMC-2</td><td class="p-3 text-cyan-400">5.0 m/px</td><td class="p-3">500 - 850 nm</td><td class="p-3">16.0 km (Triplet Stereo)</td><td class="p-3">Stereo DEM regional baseline</td></tr>
+              <tr><td class="p-3 font-bold text-white">IIRS</td><td class="p-3 text-purple-400">80.0 m/px</td><td class="p-3">800 - 5000 nm</td><td class="p-3">20.0 km (256 bands)</td><td class="p-3">Mineralogical georeferencing</td></tr>
+              <tr><td class="p-3 font-bold text-white">LRO NAC</td><td class="p-3 text-amber-400">0.50 m/px</td><td class="p-3">400 - 750 nm</td><td class="p-3">5.0 km</td><td class="p-3">Global geodetic reference frame</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <!-- ARTICLE 7: FAQ -->
+      <article id="art-faq" class="wiki-article space-y-4 hidden">
+        <div class="border-b border-white/10 pb-4">
+          <span class="text-xs font-mono text-cyan-400 uppercase tracking-wider">Article 7 • FAQ</span>
+          <h2 class="font-display text-2xl sm:text-3xl font-extrabold text-white mt-1">Frequently Asked Questions</h2>
+        </div>
+
+        <div class="space-y-3 text-xs">
+          <div class="p-4 rounded-xl bg-space-900 border border-white/5">
+            <div class="font-bold text-white mb-1">Q: How does Phase Congruency differ from edge detectors like Canny or Sobel?</div>
+            <p class="text-slate-400">Canny and Sobel detect gradient magnitude |∇I|, which relies on intensity contrast. When lighting reverses, gradients reverse. Phase Congruency detects points of order in the frequency domain, which peak at physical step edges independent of magnification or contrast polarity.</p>
+          </div>
+          <div class="p-4 rounded-xl bg-space-900 border border-white/5">
+            <div class="font-bold text-white mb-1">Q: What is the significance of the ISRO 0.40 px RMSE mandate?</div>
+            <p class="text-slate-400">In 3D planetary reconstruction, horizontal registration errors propagate into vertical elevation errors multiplied by the base-to-height ratio. Sub-pixel error (&lt; 0.40 px) is essential to eliminate artificial cliff artifacts in lunar DEMs.</p>
+          </div>
+        </div>
+      </article>
+
+    </main>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-white/5 bg-space-900/60 py-6 px-6 mt-12">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+      <div>Samanvaya (समान्वय) • ISRO Chandrayaan-2 SIH PS 26166</div>
+      <div>Designed &amp; Engineered by <a href="https://github.com/ashishsinghbora" class="text-cyan-400 underline">Ashish Singh Bora</a></div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/wiki.js"></script>
+</body>
+</html>
