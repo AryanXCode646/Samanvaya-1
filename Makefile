@@ -1,6 +1,6 @@
 # Samanvaya Makefile: Single-Command Automation
 
-.PHONY: install run api test docker clean info help
+.PHONY: install run dev api test docker clean info help
 
 PYTHON := python3
 PIP := pip
@@ -8,10 +8,11 @@ PIP := pip
 help:
 	@echo "Samanvaya: Lunar Optical Image Registration Framework"
 	@echo "Usage:"
+	@echo "  make dev      - ONE COMMAND: Start all 3 services (ML + Node.js + React)"
 	@echo "  make install  - Install dependencies and register 'samanvaya' CLI"
 	@echo "  make run      - Launch interactive Streamlit portal (port 8501)"
 	@echo "  make api      - Launch FastAPI REST backend (port 8000)"
-	@echo "  make test     - Run full 38-test automated verification suite"
+	@echo "  make test     - Run full automated verification suite"
 	@echo "  make docker   - Build and start Docker container stack"
 	@echo "  make clean    - Remove build artifacts and caches"
 	@echo "  make info     - Display system environment and mission telemetry"
@@ -20,7 +21,20 @@ install:
 	$(PIP) install --upgrade pip
 	$(PIP) install -r requirements.txt
 	$(PIP) install -e .
-	@echo "✅ Samanvaya installed successfully! Run 'make run' or 'samanvaya ui' to launch."
+	@echo "✅ Python core installed! Run 'make install-all' to also install Node.js deps."
+
+install-all:
+	@echo "📦 Installing all dependencies (Python + Node.js)..."
+	$(PIP) install --upgrade pip
+	$(PIP) install -r requirements.txt
+	$(PIP) install -e .
+	cd backend && npm install
+	cd frontend && npm install
+	@echo "✅ All dependencies installed! Run 'make dev' to start."
+
+dev:
+	@echo "🌙 Starting Samanvaya Full-Stack (ML + Gateway + React)..."
+	@bash start.sh
 
 run:
 	@echo "🚀 Launching Samanvaya Web Portal on http://localhost:8501 ..."
