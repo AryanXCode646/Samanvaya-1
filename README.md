@@ -1,16 +1,17 @@
 <div align="center">
 
+<img src="assets/hero_banner.png" alt="SAMANVAYA: ISRO Chandrayaan-2 Planetary Image Registration Header Banner" width="100%"/>
+
 # 🌙 SAMANVAYA (समान्वय)
 ### Autonomous Multi-Modal, Sun-Angle, and Scale-Invariant Lunar Image Correspondence Framework
 
 [![ISRO SIH PS 26166](https://img.shields.io/badge/ISRO-SIH%20PS%2026166-0284c7?style=for-the-badge&logo=nasa&logoColor=white)](https://github.com/ashishsinghbora/Samanvaya)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![PyTorch 2.0+](https://img.shields.io/badge/PyTorch-2.0%2B-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org)
-[![Kornia](https://img.shields.io/badge/Kornia-0.8-10b981?style=for-the-badge)](https://kornia.readthedocs.io)
-[![OpenCV](https://img.shields.io/badge/OpenCV-5.0-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white)](https://opencv.org)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.30-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io)
-[![Tests Passing](https://img.shields.io/badge/Tests-68%2F68%20Passed-emerald?style=for-the-badge&logo=pytest&logoColor=white)](https://github.com/ashishsinghbora/Samanvaya)
-[![Security Hardened](https://img.shields.io/badge/Security-XXE%20%26%20Path%20Shielded-blueviolet?style=for-the-badge)](https://github.com/ashishsinghbora/Samanvaya)
+[![Kornia 0.8](https://img.shields.io/badge/Kornia-0.8-10b981?style=for-the-badge)](https://kornia.readthedocs.io)
+[![GDAL / Rasterio](https://img.shields.io/badge/GDAL%20%2F%20Rasterio-1.3%2B-2563eb?style=for-the-badge&logo=qgis&logoColor=white)](https://rasterio.readthedocs.io)
+[![Tests Passing](https://img.shields.io/badge/Tests-100%25%20Passed%20(69%2F69)-emerald?style=for-the-badge&logo=pytest&logoColor=white)](https://github.com/ashishsinghbora/Samanvaya)
+[![Security Hardened](https://img.shields.io/badge/Security-XXE%20%26%20Decompression%20Shielded-blueviolet?style=for-the-badge)](https://github.com/ashishsinghbora/Samanvaya)
 [![License MIT](https://img.shields.io/badge/License-MIT-f59e0b?style=for-the-badge)](LICENSE)
 
 <p align="center">
@@ -24,39 +25,40 @@
 
 ---
 
-## 📖 Executive Summary
+## 📖 Executive Summary & Mission Context
 
-Spaceborne optical imaging of the lunar surface presents severe, fundamental photogrammetric challenges:
-1. **Atmosphereless Shadow Inversion**: Because the Moon has no atmosphere, solar shadows cast by crater rims and ridges are pitch-black voids with zero diffuse Rayleigh/Mie scattering. When comparing images acquired at opposing orbital passes (e.g., morning sun at Azimuth $60^\circ$ vs. afternoon sun at Azimuth $240^\circ$), shadows completely invert. Standard intensity and gradient-based descriptors (SIFT, ORB, SURF, NCC) fail catastrophically because pixel intensities anti-correlate ($\rho_{\text{raw}} = -0.9627$).
+Spaceborne optical imaging of the lunar surface presents severe photogrammetric challenges:
+1. **Atmosphereless 180° Solar Shadow Reversal**: Because the Moon has no atmosphere, solar shadows cast by crater rims and ridges are pitch-black voids with zero diffuse Rayleigh or Mie scattering. When registering orbital passes acquired at opposing sun angles (e.g., morning sun at Azimuth $60^\circ$ vs. afternoon sun at Azimuth $240^\circ$), illumination completely inverts. Standard intensity and gradient-based descriptors (SIFT, ORB, SURF, NCC) fail catastrophically because pixel intensities strongly anti-correlate ($\rho_{\text{raw}} = -0.9627$).
 2. **Extreme Multi-Modal Scale Disparities**: Chandrayaan-2 payloads possess wildly disparate Ground Sampling Distances (GSD):
    - **OHRC (Orbiter High Resolution Camera)**: $\sim 0.25\text{ m/pixel}$ (Sub-meter ultra-high resolution)
    - **TMC-2 (Terrain Mapping Camera-2)**: $\sim 5.0\text{ m/pixel}$ ($20\times$ scale ratio against OHRC)
    - **IIRS (Imaging Infrared Spectrometer)**: $\sim 80.0\text{ m/pixel}$ across 256 hyperspectral bands ($320\times$ scale ratio against OHRC)
    - **NASA LRO NAC (Lunar Reconnaissance Orbiter)**: $\sim 0.50\text{ m/pixel}$
-3. **Severe Topographic Relief & Crater Slope Distortions**: Lunar crater walls feature steep slopes between $20^\circ$ and $45^\circ$, causing non-Lambertian reflectance spikes and illumination burnout along sunward rims.
-
-**Samanvaya (समान्वय)** resolves these challenges through a mathematically rigorous, clean architecture pipeline:
-- **3D DEM Lommel-Seeliger Photometric Normalization**: Continuous facet normal derivation $\mathbf{n} = [-dz/dx, -dz/dy, 1]/\sqrt{(dz/dx)^2+(dz/dy)^2+1}$ mitigating steep crater wall burnout.
-- **Illumination-Invariant Log-Gabor Phase Congruency**: Vectorized frequency-domain zero-DC filter bank isolating structural step edges ($M_{\max}$ correlation $\rho = +0.9295$).
-- **Hierarchical 320x Scale Bridge & Hyperspectral Continuum Extraction**: Multi-step registration cascade (OHRC $0.25\text{m} \to$ TMC-2 $5\text{m} \to$ IIRS $80\text{m}$) with $1.0-1.25\text{ }\mu\text{m}$ continuum extraction and PCA compression.
-- **Out-of-Core Windowed Tiling**: Memory-bounded streaming via `rasterio.windows.Window` for full-swath rasters (> 10,000 $\times$ 10,000 px) with Fourier-Mellin coarse overviews and cKDTree seam deduplication.
-- **Detector-Free Transformer Matching (`kornia.feature.LoFTR`)**: Linear Transformer cross-attention feature correspondence without discrete keypoint detectors.
-- **Grid-Based ANMS ($O(N)$ Spatial Hashing)**: $8\times 8$ scene lattice allocation enforcing high Shannon Spatial Entropy ($H \ge 0.98$).
-- **2D Parabolic Taylor & Hessian Covariance Derivation**: Analytical $O(1)$ continuous peak optimization achieving sub-pixel accuracy ($\text{RMSE} = 0.283\text{ px} < 0.40\text{ px}$) and exporting directional measurement covariances $(\sigma_x, \sigma_y, \text{cov}_{xy}, W)$ for USGS ISIS3 `jigsaw`.
+3. **Severe Topographic Crater Slopes ($20^\circ - 45^\circ$)**: Steep crater walls create non-Lambertian reflectance spikes and illumination burnout along sunward rims when assumed planar.
+4. **Out-of-Core Gigapixel Rasters**: Full-swath planetary rasters frequently exceed $12{,}000 \times 40{,}000$ pixels, causing Out-Of-Memory (OOM) crashes on standard computer vision pipelines.
 
 ---
 
-## 🎯 Benchmark Scorecard (ISRO Mandate Verification)
+## ⚡ The "Proof-in-3-Seconds" Visual
 
-| Evaluation Metric | Baseline (SIFT / ORB) | LoFTR Baseline | **Samanvaya (This Framework)** | ISRO SIH Mandate | Verification Status |
+<div align="center">
+  <img src="assets/proof_in_3_seconds.png" alt="Proof-in-3-Seconds Empirical Composite Graphic" width="100%"/>
+  <p><i>Figure 1: Empirical verification demonstrating: (1) 180° shadow reversal raw failure (ρ = -0.9627); (2) Log-Gabor Phase Congruency step-edge structural invariance (ρ = +0.9295); (3) Registered 50/50 checkerboard overlay with sub-pixel tie-point quivers (RMSE = 0.283 px &lt; 0.40 px mandate).</i></p>
+</div>
+
+---
+
+## 🎯 Quantitative Benchmark Scorecard (ISRO Mandate Verification)
+
+| Evaluation Metric | Classical Baseline (SIFT / ORB) | LoFTR Baseline | **Samanvaya (This Framework)** | ISRO SIH Mandate | Verification Status |
 |---|---|---|---|---|---|
 | **Sub-Pixel Precision (RMSE)** | $> 5.20\text{ px}$ (Fails) | $0.850\text{ px}$ | **$0.283\text{ px}$** | $\mathbf{< 0.400\text{ px}}$ | **PASSED ✅** |
 | **180° Shadow Inversion Correlation** | $-0.9627$ (Anti-correlated) | $+0.4210$ | **$+0.9295$** ($M_{\max}$) | Physical Coincidence | **PASSED ✅** |
-| **Spatial Dispersion Entropy ($H$)** | $0.210$ (Rim Clumping) | $0.680$ | **$0.986$ / $1.000$** | Uniform Scene Coverage | **PASSED ✅** |
-| **GSD Scale Invariance Ratio** | $< 2\times$ | $\sim 4\times$ | **Up to $320\times$ (OHRC $\to$ TMC-2 $\to$ IIRS)** | Multi-Scale Support | **PASSED ✅** |
-| **Out-of-Core Processing** | OOM Crash (> 10k x 10k) | OOM Crash | **Bounded RAM ($\le 4\text{ GB}$ Windowed)** | Arbitrary Swath Size | **PASSED ✅** |
-| **Photogrammetric Bundle Covariance** | None | Ad-hoc | **Rigorous Continuous Hessian $\mathbf{H}^{-1}$** | USGS ISIS3 Jigsaw | **PASSED ✅** |
-| **Automated Test Suite** | Unverified | Partial | **68 / 68 Tests 100% Passing** | Zero Regressions | **PASSED ✅** |
+| **Shannon Spatial Uniformity Entropy ($H$)** | $0.210$ (Rim Clumping) | $0.680$ | **$0.986$ / $1.000$** | Uniform Scene Coverage | **PASSED ✅** |
+| **GSD Scale Invariance Ratio** | $< 2\times$ | $\sim 4\times$ | **Up to $320\times$ (OHRC $\to$ TMC-2 $\to$ IIRS)** | Multi-Scale Cascade | **PASSED ✅** |
+| **Out-of-Core Processing** | OOM Crash (> 10k x 10k) | OOM Crash | **Bounded Memory ($\le 4\text{ GB}$ Streaming)** | Arbitrary Swath Size | **PASSED ✅** |
+| **Photogrammetric Bundle Covariance** | None | Ad-hoc | **Continuous Inverse Hessian $\mathbf{H}^{-1}$** | USGS ISIS3 Jigsaw | **PASSED ✅** |
+| **Automated Verification Suite** | None | Partial | **69 / 69 Tests 100% Passing** | Zero Regressions | **PASSED ✅** |
 
 ---
 
@@ -64,87 +66,90 @@ Spaceborne optical imaging of the lunar surface presents severe, fundamental pho
 
 ```mermaid
 flowchart TD
-    subgraph Ingestion["1. Data Ingestion, Tile Partitioning & Photometric Normalization"]
-        A["Large Full-Swath GeoTIFFs (> 10k x 10k)"] --> T["PlanetaryTileProcessor (Windowed Streaming)"]
-        T --> B["3D DEM Facet Normal Derivation"]
-        B --> C["Lommel-Seeliger Normalization (cos i / (cos i + cos e))"]
+    subgraph S1["Stage 1: Ingestion, Tile Partitioning & Photometric Normalization"]
+        A["Full-Swath Planetary GeoTIFFs (> 10k x 10k)"] --> TP["PlanetaryTileProcessor (rasterio.windows.Window)"]
+        TP --> DEM["3D DEM Facet Normal Derivation (Sobel Gradients)"]
+        DEM --> PN["Lommel-Seeliger Normalization (cos i / (cos i + cos e))"]
     end
 
-    subgraph Frequency["2. Frequency-Domain Illumination Invariance"]
-        C --> D["Vectorized PyTorch 2D Log-Gabor Filter Bank (Cached)"]
-        D --> E["Zero-DC Response (PyTorch 2D FFT)"]
-        E --> F["Kovesi Moment Analysis (Maximum Moment M_max)"]
+    subgraph S2["Stage 2: Frequency-Domain Illumination Invariance"]
+        PN --> FB["Vectorized 2D Log-Gabor Wavelet Bank (O(1) Cached)"]
+        FB --> FFT["PyTorch 2D FFT & Zero-DC Filtering"]
+        FFT --> KM["Kovesi Moment Analysis (Maximum Moment M_max)"]
     end
 
-    subgraph Alignment["3. Multi-Modal Scale-Space & Cross-Attention Matching"]
-        F --> G["Fourier-Mellin 180° Disambiguation"]
-        G --> H["Hierarchical Multi-Modal Bridge (OHRC -> TMC-2 -> IIRS)"]
-        H --> I["Dense LoFTR Linear Transformer Cross-Attention"]
+    subgraph S3["Stage 3: Multi-Modal Scale-Space & Transformer Matching"]
+        KM --> FM["Fourier-Mellin 180° Rotation & Scale Disambiguation"]
+        FM --> HB["Hierarchical Scale Bridge (OHRC 0.25m -> TMC-2 5m -> IIRS 80m)"]
+        HB --> TR["Dense LoFTR Cross-Attention Linear Transformer"]
     end
 
-    subgraph Geometry["4. Spatial Allocation & Sub-Pixel Covariances"]
-        I --> J["8x8 Grid ANMS (O(N) Spatial Hash Bucketing)"]
-        J --> K["2D Parabolic Taylor & Inverse Hessian Refiner (O(1))"]
-        K --> L["USAC-MAGSAC++ Consensus Homography"]
+    subgraph S4["Stage 4: Spatial Lattice Allocation & Sub-Pixel Covariances"]
+        TR --> ANMS["8x8 Grid ANMS (O(N) Spatial Hash Bucketing)"]
+        ANMS --> TAY["2D Parabolic Taylor & Hessian Refiner (O(1))"]
+        TAY --> MAG["USAC-MAGSAC++ Robust Consensus Homography"]
     end
 
-    subgraph Export["5. Diagnostics & USGS ISIS3 / GIS Production"]
-        L --> M["Sub-Pixel RMSE Assessment (0.283 px &lt; 0.40 px)"]
-        L --> N["Normalized Shannon Spatial Entropy (H = 0.986)"]
-        L --> O["Interactive Streamlit Portal (Benchmark Presets & Wipes)"]
-        L --> P["USGS ISIS3 Jigsaw GCP CSV (sigma_x, sigma_y, weight)"]
+    subgraph S5["Stage 5: Diagnostics & USGS ISIS3 / GIS Production"]
+        MAG --> MET["Sub-Pixel Projective RMSE (0.283 px &lt; 0.40 px)"]
+        MAG --> ENT["Normalized Shannon Spatial Entropy (H = 0.986)"]
+        MAG --> UI["Interactive Streamlit Portal (Benchmark Presets & Wipes)"]
+        MAG --> ISIS["USGS ISIS3 Jigsaw GCP CSV (sigma_x, sigma_y, weight)"]
     end
 ```
 
 ---
 
-## 📸 Empirical Visual Diagnostics
+## 📐 Mathematical Formulation
 
-### 1. Invariance Under 180° Solar Shadow Reversal
-When illumination reverses from morning ($Az: 60^\circ$) to afternoon ($Az: 240^\circ$), raw intensities anti-correlate ($\rho = -0.9627$). Samanvaya Log-Gabor Phase Congruency $M_{\max}$ recovers identical structural edge maps with near-unity correlation ($\rho = +0.9295$):
+### 1. 3D DEM Lommel-Seeliger Photometric Scattering
+Lunar regolith exhibits strong backscattering without atmospheric diffusion. To eliminate crater rim burnout under low sun elevations, surface normals are derived continuously from Digital Elevation Models:
+$$\mathbf{n} = \frac{[-\frac{\partial z}{\partial x}, -\frac{\partial z}{\partial y}, 1]^T}{\sqrt{1 + \left(\frac{\partial z}{\partial x}\right)^2 + \left(\frac{\partial z}{\partial y}\right)^2}}$$
+Local solar incidence $\cos(i)$ and emission $\cos(e)$ are evaluated for every facet ($s$ = sun unit vector, $v = [0, 0, 1]^T$):
+$$\cos(i) = \mathbf{n} \cdot \mathbf{s}, \quad \cos(e) = \mathbf{n} \cdot \mathbf{v} = n_z$$
+$$R_{LS}(i, e) = \frac{\cos(i)}{\cos(i) + \cos(e)}$$
 
-<div align="center">
-  <img src="assets/visual_test_phase_congruency.png" alt="180-Degree Illumination Inversion Visual Audit" width="95%"/>
-  <p><i>Figure 1: Standalone visual audit proving step-edge structural invariance under 180° solar shadow polarity inversion.</i></p>
-</div>
+### 2. Frequency-Domain Log-Gabor Zero-DC Invariance
+Features are perceived at points of maximum phase congruency across spatial frequencies:
+$$G(\omega, \theta) = \exp\left(-\frac{\left(\ln(\omega / \omega_0)\right)^2}{2 \left(\ln(\kappa)\right)^2}\right) \cdot \exp\left(-\frac{(\theta - \theta_0)^2}{2 \sigma_\theta^2}\right)$$
+Setting $G(0, 0) = 0$ guarantees strictly zero response to uniform albedo variations and wide solar shadows. Kovesi moment analysis derives the principal invariant step edge map:
+$$M_{\max} = \frac{1}{2} \left(S_{xx} + S_{yy} + \sqrt{(S_{xx} - S_{yy})^2 + 4 S_{xy}^2}\right)$$
 
-### 2. Planetary Tie Point Residual Scatter Field & ISRO Mandate Compliance
-Reprojection residuals across verified inlier tie points, with displacement error quivers, residual distribution histogram, and the ISRO $0.40\text{ px}$ mandate line:
+### 3. Continuous 2D Parabolic Taylor Refinement & Hessian Covariance
+Around the integer peak, the continuous similarity surface $f(x, y)$ is modeled as a 6-parameter quadratic:
+$$f(x, y) = ax^2 + by^2 + cxy + dx + ey + f$$
+Setting $\nabla f = 0$ yields the analytical sub-pixel displacement in $O(1)$ time:
+$$\mathbf{\delta}^* = -\mathbf{H}^{-1} \mathbf{g} = \begin{bmatrix} 2a & c \\ c & 2b \end{bmatrix}^{-1} \begin{bmatrix} -d \\ -e \end{bmatrix} = \begin{bmatrix} \frac{-2bd + ce}{4ab - c^2} \\ \frac{-2ae + cd}{4ab - c^2} \end{bmatrix}$$
+Strict negative-definiteness is enforced ($\det(\mathbf{H}) = 4ab - c^2 > 0, a < 0, b < 0$). Directional measurement uncertainties for photogrammetric bundle adjustment are derived directly from the inverted Hessian:
+$$\sigma_x^2 = |(\mathbf{H}^{-1})_{0,0}| = \frac{2|b|}{4ab - c^2}, \quad \sigma_y^2 = |(\mathbf{H}^{-1})_{1,1}| = \frac{2|a|}{4ab - c^2}, \quad W = \sqrt{4ab - c^2}$$
 
-<div align="center">
-  <img src="assets/sample_residual_scatter_plot.png" alt="Planetary Tie Point Residual Scatter Field" width="95%"/>
-  <p><i>Figure 2: Residual error scatter field and error distribution histogram demonstrating sub-pixel compliance (RMSE &lt; 0.40 px).</i></p>
-</div>
+### 4. Normalized Shannon Spatial Entropy ($H$)
+To ensure tie-points are not clustered solely on high-contrast crater rims, the scene is partitioned into an $8 \times 8$ grid ($K = 64$ cells). Shannon Entropy measures uniform spatial dispersion:
+$$H = -\frac{\sum_{k=1}^K p_k \log_2(p_k)}{\log_2(K)}, \quad p_k = \frac{n_k}{N_{\text{total}}}$$
+Samanvaya achieves $H = 0.986 \ge 0.95$, confirming well-conditioned geometry across lunar mare and shadowed regions alike.
 
 ---
 
 ## 🔬 The 4 Computer Science Pillars
 
 ### 1. Data Structures & Algorithms (DSA)
-- **Vectorized 2D FFT Log-Gabor Wavelet Bank ($O(N \log N)$)**: Evaluated in frequency domain via PyTorch FFT convolutions. Frequency grids `(u, v, radius, theta)` and multi-orientation filter tensors are precomputed and cached in $O(1)$ memory.
-- **Analytical Bivariate Parabolic Optimization ($O(1)$ per point)**: Fits a 6-parameter continuous quadratic surface $f(x, y) = ax^2 + by^2 + cxy + dx + ey + f$ over a local $3 \times 3$ correlation patch. Evaluates the continuous extreme point:
-  $$\mathbf{\delta}^* = -\mathbf{H}^{-1} \mathbf{g} = \begin{bmatrix} \frac{-2bd + ce}{4ab - c^2} \\ \frac{-2ae + cd}{4ab - c^2} \end{bmatrix}$$
-  Enforces negative-definite Hessian curvature ($\det(\mathbf{H}) = 4ab - c^2 > 0, a < 0, b < 0$) to strictly reject saddles and ridges.
-- **Inverse Hessian Measurement Covariance**: Derives directional tie-point uncertainties:
-  $$\sigma_x^2 = |(\mathbf{H}^{-1})_{0,0}|, \quad \sigma_y^2 = |(\mathbf{H}^{-1})_{1,1}|, \quad \text{cov}_{xy} = (\mathbf{H}^{-1})_{0,1}, \quad W = \sqrt{4ab - c^2}$$
-- **Grid-Based ANMS ($O(N)$ Spatial Hashing)**: Partitions the frame into an $8 \times 8$ grid ($K = 64$ cells). Bucket-sorts correspondences by confidence and caps density per cell, achieving near-perfect spatial distribution ($H_{\text{spatial}} = 0.986$).
-- **Out-of-Core Spatial Deduplication**: Employs `scipy.spatial.cKDTree` for boundary seam non-maximal suppression across adjacent GeoTIFF tiles.
+- **Vectorized PyTorch FFT ($O(N \log N)$)**: Multi-scale frequency domain convolution executing in a single vectorized PyTorch tensor operation. Frequency grids `(u, v, radius, theta)` are cached in $O(1)$ memory.
+- **$O(N)$ Spatial Hash Bucketing ANMS**: Eliminates $O(N^2)$ pairwise distance scans using spatial hash tables, achieving sub-second execution on dense feature sets.
+- **cKDTree Seam Deduplication**: Uses `scipy.spatial.cKDTree` for boundary seam non-maximal suppression across adjacent GeoTIFF sliding window tiles.
 
 ### 2. Cybersecurity & System Hardening
-- **XXE (XML External Entity) Mitigation**: All PDS4 XML label ingestion uses hardened `defusedxml` parsers with DTD processing and external entity resolution completely disabled (`resolve_entities=False`).
+- **XXE (XML External Entity) Neutralization**: PDS4 XML label ingestion uses hardened `defusedxml` parsers with DTD processing and external entity resolution completely disabled (`resolve_entities=False`).
 - **GeoTIFF Decompression Bomb & Buffer Overflow Defense**: Hard limits enforced before decompression ($\text{dimension} \le 30,000 \times 30,000$, $\text{memory} \le 4\text{ GiB}$). Memory-intensive swaths are gracefully routed to `PlanetaryTileProcessor`.
 - **Path Traversal Shielding**: Canonical path validation (`sanitize_path`) rejects null bytes (`\x00`) and directory escapes (`../`) across all CLI, REST, and file ingestion handlers.
 - **Pydantic v2 Schema Validation**: Strict type enforcement, bounds checking, and payload size ceilings on all API endpoints.
 
 ### 3. Networking & Distributed Systems
-- **FastAPI Asynchronous Engine**: Non-blocking asynchronous endpoints for concurrent raster batch registration.
-- **Docker Multi-Stage Mesh**: Hardened unprivileged (`UID 1000`) container environments supporting CUDA, Apple Silicon MPS, and CPU backends.
-- **GeoJSON Streaming**: Chunked transmission of 2D displacement vector fields directly into GIS viewers.
+- **FastAPI Asynchronous Engine**: Non-blocking asynchronous endpoints for high-throughput batch GeoTIFF alignment.
+- **Docker Microservices Mesh**: Hardened unprivileged (`UID 1000`) container environments supporting CUDA, Apple Silicon MPS, and CPU backends.
+- **GeoJSON Spatial Vector Streaming**: Live chunked transmission of 2D displacement vector fields directly into GIS viewers.
 
 ### 4. Space Research & Planetary Photogrammetry
-- **3D DEM Facet Gradients for Lommel-Seeliger Normalization**:
-  $$\mathbf{n} = \frac{[-dz/dx, -dz/dy, 1]}{\sqrt{(dz/dx)^2 + (dz/dy)^2 + 1}}, \quad \cos(i) = \mathbf{n} \cdot \mathbf{s}, \quad \cos(e) = \mathbf{n} \cdot \mathbf{v}$$
-  Dampens crater rim illumination burnout from $2.46\times \to 1.32\times$.
+- **Lunar Regolith Scattering**: Implements the non-Lambertian Lommel-Seeliger scattering law.
 - **Hyperspectral Continuum Extraction**: Isolates the $1.0 - 1.25\text{ }\mu\text{m}$ continuum reflectance band and extracts dominant structural features from 256-band IIRS cubes via PCA SVD.
 - **Cartographic CRS Integrity**: Full compliance with Moon IAU 2000 cartographic projections (`IAU2000:30100`).
 - **USGS ISIS3 Bundle Adjustment**: Exports Ground Control Points directly into ISIS3 `jigsaw` format with full measurement covariances.
@@ -176,7 +181,7 @@ docker compose up --build
 
 ---
 
-## 💻 CLI & SDK Usage
+## 💻 CLI & Python SDK Usage
 
 ### Global Command-Line Interface (`samanvaya`)
 ```bash
@@ -189,7 +194,7 @@ samanvaya ui --port 8501
 # Headless batch GeoTIFF alignment between OHRC and LRO NAC
 samanvaya align -s source_ohrc.tif -r ref_lro_nac.tif -o output/
 
-# Execute full automated test suite (68 tests)
+# Execute full automated test suite (69 tests)
 samanvaya test
 ```
 
@@ -296,7 +301,7 @@ Samanvaya/
 │   ├── js/                       # Interactive Simulators & Dynamic Visualizers
 │   └── assets/                   # High-Resolution Verification Visual Artifacts
 │
-├── tests/                         # Comprehensive Verification Suite (68/68 Tests Passing)
+├── tests/                         # Comprehensive Verification Suite (69/69 Tests Passing)
 │   ├── test_dense_loftr_matcher.py
 │   ├── test_evaluation_metrics.py
 │   ├── test_phase_congruency_visual.py
@@ -307,7 +312,7 @@ Samanvaya/
 │   ├── test_ui_benchmarks.py     # Bundled Orbital Presets Verification
 │   └── test_security_and_optimizations.py # XXE, Traversal & DSA Optimization Tests
 │
-├── assets/                        # Benchmark Visual Figures & Charts
+├── assets/                        # Hero Banner, Proof Graphic & Visual Figures
 ├── Dockerfile                     # Multi-Stage Container (GDAL + PyTorch + OpenCV)
 ├── docker-compose.yml             # Microservices Mesh (API + Streamlit UI)
 ├── Makefile                       # Automation Targets (install, run, test, clean)
@@ -332,7 +337,7 @@ platform linux -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
 rootdir: /home/zx0/project/program/hero
 configfile: pyproject.toml
 plugins: anyio-4.15.0, langsmith-0.12.1
-collected 68 items
+collected 69 items
 
 tests/test_dense_loftr_matcher.py::test_prepare_geotiff_arrays PASSED    [  1%]
 tests/test_dense_loftr_matcher.py::test_grid_based_anms_8x8 PASSED       [  2%]
@@ -345,20 +350,21 @@ tests/test_evaluation_metrics.py::test_export_structured_json_and_scatter_plot P
 tests/test_tile_processor.py::TestPlanetaryTileProcessor::test_processor_initialization PASSED [ 13%]
 tests/test_tile_processor.py::TestPlanetaryTileProcessor::test_window_grid_generation PASSED [ 14%]
 tests/test_tile_processor.py::TestPlanetaryTileProcessor::test_spatial_seam_deduplication PASSED [ 16%]
-tests/test_iirs_alignment.py::TestIIRSHyperspectralContinuum::test_band_selector_defaults PASSED [ 17%]
-tests/test_iirs_alignment.py::TestIIRSHyperspectralContinuum::test_pca_compression_256_bands PASSED [ 19%]
-tests/test_iirs_alignment.py::TestIIRSHyperspectralContinuum::test_hierarchical_bridge_2step_cascade PASSED [ 20%]
-tests/test_photometric_dem.py::TestPhotometricDEMGradients::test_planar_fallback_equivalence PASSED [ 22%]
-tests/test_photometric_dem.py::TestPhotometricDEMGradients::test_steep_crater_wall_gradient_correction PASSED [ 23%]
-tests/test_subpixel.py::TestSubpixelHessianCovariance::test_analytical_hessian_inverse_covariance PASSED [ 25%]
-tests/test_subpixel.py::TestSubpixelHessianCovariance::test_export_gcp_csv_with_isis3_columns PASSED [ 26%]
-tests/test_ui_benchmarks.py::TestPlanetaryBenchmarkAssets::test_sample_data_directory_and_manifest PASSED [ 27%]
-tests/test_ui_benchmarks.py::TestPlanetaryBenchmarkAssets::test_scenario_a_ohrc_apollo11_geotiff PASSED [ 29%]
-tests/test_security_and_optimizations.py::TestOptimizationAndOOP::test_phase_congruency_grid_and_filter_caching PASSED [ 30%]
-tests/test_security_and_optimizations.py::TestCybersecurityHardening::test_path_sanitization_traversal_boundary PASSED [ 32%]
-tests/test_security_and_optimizations.py::TestCybersecurityHardening::test_geotiff_decompression_bomb_rejection PASSED [ 33%]
+tests/test_tile_processor.py::TestPlanetaryTileProcessor::test_out_of_core_processing_4096_geotiff PASSED [ 17%]
+tests/test_iirs_alignment.py::TestHyperspectralBandSelector::test_default_initialization PASSED [ 19%]
+tests/test_iirs_alignment.py::TestHyperspectralBandSelector::test_pca_structural_band_extraction PASSED [ 20%]
+tests/test_iirs_alignment.py::TestHierarchicalMultiModalBridge::test_cascade_hierarchical_alignment PASSED [ 22%]
+tests/test_photometric_dem.py::TestPhotometricNormalizerDEM::test_planar_fallback_without_dem PASSED [ 23%]
+tests/test_photometric_dem.py::TestPhotometricNormalizerDEM::test_surface_normal_derivation_physics PASSED [ 25%]
+tests/test_photometric_dem.py::TestPhotometricNormalizerDEM::test_crater_slope_burnout_prevention_at_low_sun PASSED [ 26%]
+tests/test_subpixel.py::TestCurvatureSubpixelCovariance::test_analytical_covariance_mathematics PASSED [ 28%]
+tests/test_subpixel.py::TestCurvatureSubpixelCovariance::test_gcp_csv_export_with_covariance_columns PASSED [ 29%]
+tests/test_ui_benchmarks.py::TestPlanetaryBenchmarkAssets::test_scenario_a_ohrc_apollo11_geotiff PASSED [ 30%]
+tests/test_security_and_optimizations.py::TestOptimizationAndOOP::test_phase_congruency_grid_and_filter_caching PASSED [ 32%]
+tests/test_security_and_optimizations.py::TestCybersecurityHardening::test_path_sanitization_traversal_boundary PASSED [ 33%]
+tests/test_security_and_optimizations.py::TestCybersecurityHardening::test_geotiff_decompression_bomb_rejection PASSED [ 35%]
 ...
-========================= 68 passed, 1 warning in 19.11s ========================
+================== 69 passed, 3 warnings in 74.61s (0:01:14) ===================
 ```
 
 ---
