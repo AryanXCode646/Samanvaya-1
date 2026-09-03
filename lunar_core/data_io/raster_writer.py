@@ -13,6 +13,7 @@ import rasterio
 from rasterio.transform import Affine, from_origin
 
 from lunar_core.models import GeoRaster, KeypointMatch
+from lunar_core.data_io.raster_reader import sanitize_path
 
 
 class PlanetaryRasterWriter:
@@ -30,7 +31,7 @@ class PlanetaryRasterWriter:
         """
         Exports registered raster as a standard Moon IAU 2000 GeoTIFF.
         """
-        out_path = Path(output_path)
+        out_path = sanitize_path(output_path)
         out_path.parent.mkdir(parents=True, exist_ok=True)
         h, w = data.shape[:2]
 
@@ -65,13 +66,22 @@ class PlanetaryRasterWriter:
         out_path = Path(output_path)
         out_path.parent.mkdir(parents=True, exist_ok=True)
 
-        lines = ["gcp_id,pixel_ref,line_ref,pixel_tgt,line_tgt,geo_x,geo_y,residual_px,confidence\n"]
+        lines = [
+            "gcp_id,pixel_ref,line_ref,pixel_tgt,line_tgt,geo_x,geo_y,residual_px,confidence,sigma_x,sigma_y,cov_xy,weight\n"
+        ]
         for idx, m in enumerate(matches):
             rx, ry = m.ref_xy
             tx, ty = m.target_xy
             geo_x, geo_y = ref_transform * (rx, ry) if ref_transform else (rx, ry)
             res = m.residual_error if m.residual_error is not None else 0.0
-            lines.append(f"{idx},{rx:.4f},{ry:.4f},{tx:.4f},{ty:.4f},{geo_x:.6f},{geo_y:.6f},{res:.4f},{m.confidence:.4f}\n")
+            sx = m.sigma_x if m.sigma_x is not None else 0.50
+            sy = m.sigma_y if m.sigma_y is not None else 0.50
+            cxy = m.cov_xy if m.cov_xy is not None else 0.0
+            w = m.weight if m.weight is not None else (m.confidence if m.confidence is not None else 1.0)
+            lines.append(
+                f"{idx},{rx:.4f},{ry:.4f},{tx:.4f},{ty:.4f},{geo_x:.6f},{geo_y:.6f},{res:.4f},{m.confidence:.4f},"
+                f"{sx:.6f},{sy:.6f},{cxy:.6f},{w:.6f}\n"
+            )
 
         with open(out_path, "w") as f:
             f.writelines(lines)

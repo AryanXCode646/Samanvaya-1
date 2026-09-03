@@ -64,13 +64,22 @@ class LunarCorePipeline:
         target_sun: Optional[SunAngles] = None,
         ref_gsd: float = 1.0,
         target_gsd: float = 1.0,
+        dem_data: Optional[np.ndarray] = None,
+        ref_dem: Optional[np.ndarray] = None,
+        target_dem: Optional[np.ndarray] = None,
     ) -> RegistrationResult:
         start_time = time.perf_counter()
 
-        # Step 1: Preprocessing & Photometric Normalization
+        # Step 1: Preprocessing & Photometric Normalization with optional DEM slope correction
         if self.enable_photometric and ref_sun and target_sun:
-            img_ref_norm, _ = self.photometric.normalize(ref_image, ref_sun)
-            img_tgt_norm, _ = self.photometric.normalize(target_image, target_sun)
+            r_dem = ref_dem if ref_dem is not None else dem_data
+            t_dem = target_dem if target_dem is not None else dem_data
+            img_ref_norm, _ = self.photometric.normalize(
+                ref_image, ref_sun, dem_data=r_dem, pixel_gsd=ref_gsd
+            )
+            img_tgt_norm, _ = self.photometric.normalize(
+                target_image, target_sun, dem_data=t_dem, pixel_gsd=target_gsd
+            )
         else:
             img_ref_norm = (ref_image - np.min(ref_image)) / (np.ptp(ref_image) + 1e-6)
             img_tgt_norm = (target_image - np.min(target_image)) / (np.ptp(target_image) + 1e-6)

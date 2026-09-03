@@ -264,12 +264,21 @@ class DenseLoFTRMatcher:
                 if abs(dx_star) <= 1.0 and abs(dy_star) <= 1.0:
                     refined_sx = float(m.target_xy[0] + dx_star)
                     refined_sy = float(m.target_xy[1] + dy_star)
+                    sigma_x = float(np.sqrt(abs((2.0 * b) / det_h)))
+                    sigma_y = float(np.sqrt(abs((2.0 * a) / det_h)))
+                    cov_xy = float(-c / det_h)
+                    weight = float(np.sqrt(det_h))
                     refined_list.append(
                         KeypointMatch(
                             ref_xy=m.ref_xy,
                             target_xy=(refined_sx, refined_sy),
                             confidence=m.confidence,
                             subpixel_refined=True,
+                            residual_error=m.residual_error,
+                            sigma_x=sigma_x,
+                            sigma_y=sigma_y,
+                            cov_xy=cov_xy,
+                            weight=weight,
                         )
                     )
                     continue

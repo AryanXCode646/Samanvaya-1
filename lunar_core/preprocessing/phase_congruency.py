@@ -41,6 +41,23 @@ class PhaseCongruencyOutput:
         }
 
 
+def get_optimal_hardware_device(requested_device: Optional[Union[str, torch.device]] = None) -> torch.device:
+    """
+    Selects optimal hardware accelerator (CUDA -> Apple Silicon MPS -> CPU)
+    with seamless automatic fallback and zero runtime exceptions.
+    """
+    if requested_device is not None:
+        try:
+            return torch.device(requested_device)
+        except Exception:
+            pass
+    if torch.cuda.is_available():
+        return torch.device("cuda")
+    if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+        return torch.device("mps")
+    return torch.device("cpu")
+
+
 class PhaseCongruencyEngine:
     """
     PyTorch & Kornia accelerated 2D Log-Gabor Phase Congruency Engine.
@@ -48,7 +65,7 @@ class PhaseCongruencyEngine:
     Operates in the 2D frequency domain using PyTorch FFT convolutions.
     Features:
     - Zero DC component strictly rejects low-frequency uneven solar lighting and albedo gradients.
-    - Vectorized multi-scale, multi-orientation filter bank execution.
+    - Cached multi-scale, multi-orientation filter bank execution for ultra-fast repeated inference.
     - Kovesi Moment analysis for Maximum Moment (M_max) step edge detection.
     - Robust intensity normalization with Kornia for high-contrast, shadowed crater terrains.
     """
@@ -71,7 +88,11 @@ class PhaseCongruencyEngine:
         self.sigma_on_f = sigma_on_f
         self.d_theta_on_sigma = d_theta_on_sigma
         self.k_noise = k_noise
-        self.device = torch.device(device) if device is not None else torch.device("cpu")
+        self.device = get_optimal_hardware_device(device)
+
+        # High-performance spatial-frequency caches
+        self._filter_cache: Dict[Tuple[int, int, str], torch.Tensor] = {}
+        self._grid_cache: Dict[Tuple[int, int, str], Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]] = {}
 
     def normalize_shadowed_lunar_image(
         self,
@@ -107,6 +128,31 @@ class PhaseCongruencyEngine:
         # Return 2D float32 tensor [H, W]
         return normalized.squeeze()
 
+    def get_cached_frequency_grids(
+        self,
+        rows: int,
+        cols: int,
+        device: torch.device,
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        """
+        Retrieves or caches precomputed frequency coordinate grids: (u_grid, v_grid, radius, theta).
+        """
+        cache_key = (rows, cols, str(device))
+        if cache_key in self._grid_cache:
+            return self._grid_cache[cache_key]
+
+        v = torch.linspace(-0.5, 0.5 - 1.0 / rows, rows, device=device, dtype=torch.float32)
+        u = torch.linspace(-0.5, 0.5 - 1.0 / cols, cols, device=device, dtype=torch.float32)
+        v_grid, u_grid = torch.meshgrid(v, u, indexing="ij")
+        radius = torch.sqrt(u_grid**2 + v_grid**2)
+        radius[rows // 2, cols // 2] = 1.0  # Avoid log(0) at DC component
+
+        theta = torch.atan2(-v_grid, u_grid)
+
+        grids = (u_grid, v_grid, radius, theta)
+        self._grid_cache[cache_key] = grids
+        return grids
+
     def build_log_gabor_filter_bank(
         self,
         rows: int,
@@ -115,16 +161,13 @@ class PhaseCongruencyEngine:
     ) -> torch.Tensor:
         """
         Constructs vectorized 2D Log-Gabor frequency filter bank of shape [n_scale, n_orient, rows, cols].
-        Zero-DC component at center guarantees zero response to uniform lighting/albedo.
+        Employs O(1) memory caching to bypass repetitive wave grid recalculations.
         """
-        # Frequency coordinate grids
-        v = torch.linspace(-0.5, 0.5 - 1.0 / rows, rows, device=device, dtype=torch.float32)
-        u = torch.linspace(-0.5, 0.5 - 1.0 / cols, cols, device=device, dtype=torch.float32)
-        v_grid, u_grid = torch.meshgrid(v, u, indexing="ij")
-        radius = torch.sqrt(u_grid**2 + v_grid**2)
-        radius[rows // 2, cols // 2] = 1.0  # Avoid log(0) at DC component
+        cache_key = (rows, cols, str(device))
+        if cache_key in self._filter_cache:
+            return self._filter_cache[cache_key]
 
-        theta = torch.atan2(-v_grid, u_grid)
+        _, _, radius, theta = self.get_cached_frequency_grids(rows, cols, device)
         sintheta = torch.sin(theta)
         costheta = torch.cos(theta)
 
@@ -148,7 +191,9 @@ class PhaseCongruencyEngine:
         filters = log_gabor_radial.unsqueeze(1) * spread.unsqueeze(0)
 
         # Shift zero-frequency to corners for PyTorch fft2/ifft2
-        return torch.fft.ifftshift(filters, dim=(-2, -1))
+        shifted = torch.fft.ifftshift(filters, dim=(-2, -1))
+        self._filter_cache[cache_key] = shifted
+        return shifted
 
     def compute(
         self,

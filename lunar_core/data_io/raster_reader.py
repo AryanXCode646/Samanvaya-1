@@ -5,18 +5,45 @@ Planetary Data Ingestion Driver (GDAL/Rasterio GeoTIFF and PDS4 Reader).
 from __future__ import annotations
 
 import os
-import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Optional, Tuple, Union
 import numpy as np
 import rasterio
 
+try:
+    import defusedxml.ElementTree as hardened_ET
+except ImportError:
+    import xml.etree.ElementTree as hardened_ET
+
 from lunar_core.models import GeoRaster, SensorModality, SunAngles
+
+# Cybersecurity & Memory Safety Thresholds
+MAX_RASTER_DIMENSION = 30000          # 30,000 x 30,000 max single raster dimension
+MAX_UNCOMPRESSED_BYTES = 4 * 1024**3  # 4 GiB hard memory safety limit
+
+
+def sanitize_path(input_path: Union[str, Path], allowed_dir: Optional[Path] = None) -> Path:
+    """
+    Sanitizes file paths against directory traversal attacks ('../' escapes) and null bytes.
+    """
+    path_str = str(input_path)
+    if "\x00" in path_str:
+        raise ValueError("Security violation: null byte detected in file path")
+    
+    resolved = Path(input_path).resolve()
+    if allowed_dir is not None:
+        allowed = allowed_dir.resolve()
+        try:
+            resolved.relative_to(allowed)
+        except ValueError:
+            raise PermissionError(f"Security violation: path traversal outside allowed directory '{allowed}'")
+    return resolved
 
 
 class PlanetaryRasterReader:
     """
     Reads planetary imagery from standard GeoTIFF formats and PDS4 product labels.
+    Hardened against XXE injection, decompression bombs, and directory traversal.
     """
 
     @staticmethod
@@ -24,15 +51,34 @@ class PlanetaryRasterReader:
         filepath: Union[str, Path],
         modality: SensorModality = SensorModality.SYNTHETIC,
         gsd_fallback: float = 1.0,
+        allowed_dir: Optional[Path] = None,
     ) -> GeoRaster:
         """
         Ingests georeferenced GeoTIFF raster and extracts spatial resolution and CRS.
+        Enforces decompression bomb and memory allocation checks before raster reading.
         """
-        path = Path(filepath)
+        path = sanitize_path(filepath, allowed_dir=allowed_dir)
         if not path.exists():
             raise FileNotFoundError(f"GeoTIFF file not found: {path}")
 
         with rasterio.open(str(path)) as src:
+            # Shield against Decompression Bomb Denial of Service (DoS)
+            if src.width > MAX_RASTER_DIMENSION or src.height > MAX_RASTER_DIMENSION:
+                raise ValueError(
+                    f"Decompression bomb rejected: Raster dimensions ({src.width}x{src.height}) "
+                    f"exceed security ceiling ({MAX_RASTER_DIMENSION}x{MAX_RASTER_DIMENSION}). "
+                    "Use PlanetaryTileProcessor for out-of-core windowed processing."
+                )
+
+            itemsize = np.dtype(src.dtypes[0]).itemsize if src.dtypes else 4
+            estimated_bytes = src.width * src.height * src.count * itemsize
+            if estimated_bytes > MAX_UNCOMPRESSED_BYTES:
+                raise MemoryError(
+                    f"Decompression bomb rejected: Buffer ({estimated_bytes / (1024**2):.1f} MB) "
+                    f"exceeds safe threshold ({MAX_UNCOMPRESSED_BYTES / (1024**2):.1f} MB). "
+                    "Use PlanetaryTileProcessor for out-of-core windowed processing."
+                )
+
             data = src.read(1).astype(np.float32)
             transform = src.transform
             crs = str(src.crs) if src.crs else "IAU2000:30100"
@@ -60,12 +106,13 @@ class PlanetaryRasterReader:
         )
 
     @staticmethod
-    def parse_pds4_metadata(label_xml_path: Union[str, Path]) -> Tuple[SunAngles, float, SensorModality]:
+    def parse_pds4_metadata(label_xml_path: Union[str, Path], allowed_dir: Optional[Path] = None) -> Tuple[SunAngles, float, SensorModality]:
         """
-        Parses PDS4 XML label for Chandrayaan-2/LRO products:
+        Parses PDS4 XML label for Chandrayaan-2/LRO products with XXE protection:
         Extracts solar illumination angles, pixel resolution (GSD), and sensor modality.
         """
-        tree = ET.parse(str(label_xml_path))
+        safe_path = sanitize_path(label_xml_path, allowed_dir=allowed_dir)
+        tree = hardened_ET.parse(str(safe_path))
         root = tree.getroot()
 
         # Extract namespace if present

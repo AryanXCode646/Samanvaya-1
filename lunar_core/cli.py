@@ -54,12 +54,13 @@ def cmd_test(args: argparse.Namespace) -> None:
 def cmd_align(args: argparse.Namespace) -> None:
     """Headless CLI alignment between Source and Reference lunar GeoTIFFs."""
     from lunar_core.data_io import PlanetaryRasterReader, PlanetaryRasterWriter
+    from lunar_core.data_io.raster_reader import sanitize_path
     from lunar_core.alignment.dense_matcher import DenseLoFTRMatcher
     from lunar_core.evaluation.metrics import EvaluationEngine
 
-    src_path = Path(args.source)
-    ref_path = Path(args.reference)
-    out_dir = Path(args.output or "output")
+    src_path = sanitize_path(args.source)
+    ref_path = sanitize_path(args.reference)
+    out_dir = sanitize_path(args.output or "output")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"📥 Loading Source Raster: {src_path}")

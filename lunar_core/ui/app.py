@@ -12,7 +12,7 @@ import json
 from pathlib import Path
 import sys
 import time
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 # Ensure project root is in sys.path regardless of execution working directory
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -45,8 +45,64 @@ st.title("🌙 ISRO Chandrayaan-2 Lunar Image Registration Portal")
 st.markdown("### SIH PS 26166: Multi-Modal (OHRC / TMC-2 / IIRS vs. LRO NAC), Sun-Angle & Scale-Invariant Alignment")
 
 # -----------------------------------------------------------------------------
-# Helper Functions: Image Loading & Plotting
+# Helper Functions: Image Loading, Sample Presets & Plotting
 # -----------------------------------------------------------------------------
+
+def get_sample_data_dir() -> Path:
+    """Robustly locates lunar_core/assets/sample_data across local, CLI, and Docker environments."""
+    local_path = Path(__file__).resolve().parent.parent / "assets" / "sample_data"
+    if local_path.exists() and (local_path / "manifest.json").exists():
+        return local_path
+    cwd_path = Path.cwd() / "lunar_core" / "assets" / "sample_data"
+    if cwd_path.exists() and (cwd_path / "manifest.json").exists():
+        return cwd_path
+    root_path = _PROJECT_ROOT / "lunar_core" / "assets" / "sample_data"
+    if root_path.exists() and (root_path / "manifest.json").exists():
+        return root_path
+    return local_path
+
+
+@st.cache_data(show_spinner=False)
+def load_sample_manifest() -> dict:
+    """Loads benchmark preset metadata catalog."""
+    manifest_file = get_sample_data_dir() / "manifest.json"
+    if manifest_file.exists():
+        try:
+            with open(manifest_file, "r") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {}
+
+
+@st.cache_data(show_spinner=False)
+def load_geotiff_file(file_path: Union[str, Path]) -> np.ndarray:
+    """Safely loads a cached GeoTIFF from disk as normalized float32 [0.0, 1.0]."""
+    path = Path(file_path)
+    if not path.exists():
+        raise FileNotFoundError(f"GeoTIFF file not found: {path}")
+    try:
+        import rasterio
+        with rasterio.open(str(path)) as src:
+            arr = src.read(1).astype(np.float32)
+            if src.nodata is not None:
+                arr[arr == src.nodata] = np.nan
+            p_low = float(np.nanpercentile(arr, 1.0))
+            p_high = float(np.nanpercentile(arr, 99.0))
+            denom = max(p_high - p_low, 1e-5)
+            return np.clip((arr - p_low) / denom, 0.0, 1.0).astype(np.float32)
+    except Exception:
+        # Fallback to OpenCV
+        img = cv2.imread(str(path), cv2.IMREAD_UNCHANGED)
+        if img is None:
+            raise ValueError(f"Could not load image file {path}")
+        if img.ndim == 3:
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        img_f = img.astype(np.float32)
+        p_low, p_high = np.percentile(img_f, 1.0), np.percentile(img_f, 99.0)
+        denom = max(float(p_high - p_low), 1e-5)
+        return np.clip((img_f - p_low) / denom, 0.0, 1.0).astype(np.float32)
+
 
 def load_uploaded_image(uploaded_file) -> np.ndarray:
     """Safely loads an uploaded GeoTIFF, TIFF, PNG, or JPEG file as a 2D float32 array."""
@@ -134,19 +190,55 @@ def render_tie_point_correspondences(
 
 
 # -----------------------------------------------------------------------------
-# Sidebar Configuration & Uploaders
+# Sidebar Configuration & Mission Evaluation Benchmarks
 # -----------------------------------------------------------------------------
 
-st.sidebar.header("🛰️ Planetary Sensor Configuration")
-source_modality = st.sidebar.selectbox("Source Modality", [SensorModality.OHRC.value, SensorModality.TMC2.value, SensorModality.IIRS.value], index=0)
-ref_modality = st.sidebar.selectbox("Reference Modality", [SensorModality.LRO_NAC.value, SensorModality.TMC2.value], index=0)
+st.sidebar.header("🎯 Mission Evaluation Benchmark")
+sample_manifest = load_sample_manifest()
+benchmarks = sample_manifest.get("benchmarks", {})
+
+benchmark_options = {
+    "Scenario A: Chandrayaan-2 OHRC vs LRO NAC (Apollo 11 Landing Site, sub-meter)": "scenario_a",
+    "Scenario B: TMC-2 Nadir vs TMC-2 Fore (Stereo baseline pair, 5 m/px)": "scenario_b",
+    "Scenario C: Extreme Solar Lighting Disparity (Low Sun 12° vs High Sun 65°)": "scenario_c",
+    "Synthetic Lunar Crater Simulation": "synthetic_sim",
+    "Custom GeoTIFF Upload": "custom_upload",
+}
+
+selected_benchmark = st.sidebar.selectbox(
+    "Select Mission Evaluation Benchmark",
+    list(benchmark_options.keys()),
+    index=0,
+)
+selected_key = benchmark_options[selected_benchmark]
+
+# Automatic modality syncing based on selected preset
+default_src_mod = SensorModality.OHRC.value
+default_ref_mod = SensorModality.LRO_NAC.value
+
+if selected_key == "scenario_b":
+    default_src_mod = SensorModality.TMC2.value
+    default_ref_mod = SensorModality.TMC2.value
+elif selected_key == "scenario_c":
+    default_src_mod = SensorModality.OHRC.value
+    default_ref_mod = SensorModality.LRO_NAC.value
 
 st.sidebar.markdown("---")
-st.sidebar.header("📁 Input GeoTIFF Rasters")
-use_demo_data = st.sidebar.checkbox("Load High-Contrast Lunar Crater Demo Pair", value=True)
+st.sidebar.header("🛰️ Planetary Sensor Configuration")
+src_idx = [SensorModality.OHRC.value, SensorModality.TMC2.value, SensorModality.IIRS.value].index(default_src_mod)
+ref_idx = [SensorModality.LRO_NAC.value, SensorModality.TMC2.value].index(default_ref_mod)
 
-uploaded_src = st.sidebar.file_uploader("Upload Source GeoTIFF (OHRC / TMC-2)", type=["tif", "tiff", "geotiff", "png", "jpg"])
-uploaded_ref = st.sidebar.file_uploader("Upload Reference GeoTIFF (LRO NAC / Base)", type=["tif", "tiff", "geotiff", "png", "jpg"])
+source_modality = st.sidebar.selectbox("Source Modality", [SensorModality.OHRC.value, SensorModality.TMC2.value, SensorModality.IIRS.value], index=src_idx)
+ref_modality = st.sidebar.selectbox("Reference Modality", [SensorModality.LRO_NAC.value, SensorModality.TMC2.value], index=ref_idx)
+
+uploaded_src = None
+uploaded_ref = None
+
+if selected_key == "custom_upload":
+    st.sidebar.markdown("---")
+    st.sidebar.header("📁 Upload Custom GeoTIFF Rasters")
+    uploaded_src = st.sidebar.file_uploader("Upload Source GeoTIFF (OHRC / TMC-2)", type=["tif", "tiff", "geotiff", "png", "jpg"])
+    uploaded_ref = st.sidebar.file_uploader("Upload Reference GeoTIFF (LRO NAC / Base)", type=["tif", "tiff", "geotiff", "png", "jpg"])
 
 st.sidebar.markdown("---")
 st.sidebar.header("⚙️ Alignment Engine Parameters")
@@ -162,34 +254,65 @@ magsac_thresh = st.sidebar.slider("USAC-MAGSAC++ Reprojection Threshold (px)", 0
 img_source: Optional[np.ndarray] = None
 img_ref: Optional[np.ndarray] = None
 
-if use_demo_data or (uploaded_src is None and uploaded_ref is None):
-    # Built-in synthetic high-contrast demo pair with severe opposite sun shadows
+if selected_key in ["scenario_a", "scenario_b", "scenario_c"]:
+    bm = benchmarks.get(selected_key, {})
+    sample_dir = get_sample_data_dir()
+    src_path = sample_dir / bm["source"]["filename"]
+    ref_path = sample_dir / bm["reference"]["filename"]
+
+    try:
+        img_source = load_geotiff_file(src_path)
+        img_ref = load_geotiff_file(ref_path)
+    except Exception as e:
+        st.error(f"Failed to load cached benchmark GeoTIFF: {e}")
+
+    # Display Mission Acquisition Metadata Card
+    st.markdown(f"### 🎯 Benchmark: {bm.get('title', selected_benchmark)}")
+    st.markdown(f"**Target Site**: {bm.get('target', 'Moon')} — *{bm.get('description', '')}*")
+
+    col_meta1, col_meta2 = st.columns(2)
+    with col_meta1:
+        st.info(f"""
+        **🚀 Source: {bm['source']['spacecraft']}**
+        - **Payload Sensor**: `{bm['source']['sensor']}`
+        - **Ground Sampling Distance**: `{bm['source']['gsd_m']} m/pixel`
+        - **Orbit Altitude**: `{bm['source']['altitude_km']} km`
+        - **Solar Geometry**: Azimuth `{bm['source']['sun_azimuth_deg']}°`, Elevation `{bm['source']['sun_elevation_deg']}°`
+        """)
+    with col_meta2:
+        st.info(f"""
+        **🔭 Reference: {bm['reference']['spacecraft']}**
+        - **Payload Sensor**: `{bm['reference']['sensor']}`
+        - **Ground Sampling Distance**: `{bm['reference']['gsd_m']} m/pixel`
+        - **Orbit Altitude**: `{bm['reference']['altitude_km']} km`
+        - **Solar Geometry**: Azimuth `{bm['reference']['sun_azimuth_deg']}°`, Elevation `{bm['reference']['sun_elevation_deg']}°`
+        """)
+
+elif selected_key == "synthetic_sim":
     sim = LunarTerrainSimulator(size=(256, 256), seed=101)
     dem = sim.generate_dem(num_craters=12)
 
-    # Reference: Morning Sun (Azimuth 60°, Elevation 25° - severe East shadows)
     sun_ref = SunAngles(azimuth_deg=60.0, elevation_deg=25.0)
     img_ref = sim.render_optical_image(dem, sun_ref)
 
-    # Source: Afternoon Sun (Azimuth 240°, Elevation 25° - 180° inverted shadows) + shift
     sun_src = SunAngles(azimuth_deg=240.0, elevation_deg=25.0)
     img_src_raw = sim.render_optical_image(dem, sun_src)
 
-    # Ground-truth transformation: rotation=1.8°, translation=(4.5 px, -3.2 px)
     mat_true = cv2.getRotationMatrix2D((128, 128), 1.8, 1.0)
     mat_true[:, 2] += [4.5, -3.2]
     img_source = cv2.warpAffine(img_src_raw, mat_true, (256, 256))
-    st.info(r"💡 Running in **Demonstration Mode**: Simulating Chandrayaan-2 OHRC morning frame vs. LRO NAC afternoon frame with $180^\circ$ inverted shadow polarity.")
-else:
+    st.info(r"💡 Running in **Synthetic Mode**: Simulating Chandrayaan-2 OHRC morning frame vs. LRO NAC afternoon frame with $180^\circ$ inverted shadow polarity.")
+
+elif selected_key == "custom_upload":
     if uploaded_src is not None and uploaded_ref is not None:
         try:
             img_source = load_uploaded_image(uploaded_src)
             img_ref = load_uploaded_image(uploaded_ref)
-            st.success(f"Loaded Source ({img_source.shape[1]}x{img_source.shape[0]}) and Reference ({img_ref.shape[1]}x{img_ref.shape[0]}) GeoTIFFs.")
+            st.success(f"Loaded Custom Source ({img_source.shape[1]}x{img_source.shape[0]}) and Reference ({img_ref.shape[1]}x{img_ref.shape[0]}) GeoTIFFs.")
         except Exception as e:
             st.error(f"Error reading GeoTIFF rasters: {e}")
     else:
-        st.warning("Please upload both Source and Reference GeoTIFFs, or check 'Load High-Contrast Lunar Crater Demo Pair'.")
+        st.warning("Please upload both Source and Reference GeoTIFFs via the sidebar to execute registration.")
 
 # -----------------------------------------------------------------------------
 # End-to-End Alignment Pipeline Execution with Progress Bar

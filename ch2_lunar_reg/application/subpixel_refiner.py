@@ -15,13 +15,40 @@ Enforces negative definiteness: det(H) > 0, H_xx < 0, H_yy < 0.
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from typing import List, Optional, Tuple
 import cv2
 import numpy as np
 from ch2_lunar_reg.domain.models import KeypointMatch
 
 
-class TaylorSubpixelRefiner:
+class SubpixelRefinerBase(ABC):
+    """
+    Abstract Base Class for sub-pixel continuous refinement.
+    """
+
+    @abstractmethod
+    def refine_match(
+        self,
+        match: KeypointMatch,
+        ref_img: np.ndarray,
+        target_img: np.ndarray,
+    ) -> KeypointMatch:
+        """Refines a single correspondence."""
+        pass
+
+    @abstractmethod
+    def refine_matches_batch(
+        self,
+        matches: List[KeypointMatch],
+        ref_img: np.ndarray,
+        target_img: np.ndarray,
+    ) -> List[KeypointMatch]:
+        """Refines a batch of keypoints."""
+        pass
+
+
+class TaylorSubpixelRefiner(SubpixelRefinerBase):
     """
     Sub-pixel continuous peak estimator using 2nd-order bivariate Taylor series.
     Guarantees sub-pixel localization accuracy with RMSE < 0.4 pixels.

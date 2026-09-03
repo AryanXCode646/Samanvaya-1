@@ -51,26 +51,34 @@ class LogGaborFilterBank:
         self.mult = mult
         self.sigma_on_f = sigma_on_f
         self.d_theta_on_sigma = d_theta_on_sigma
+        self._filter_cache: dict = {}
+        self._grid_cache: dict = {}
 
     def build_filters(self, rows: int, cols: int) -> List[List[np.ndarray]]:
         """
         Constructs 2D frequency-domain Log-Gabor kernels of dimensions (rows, cols).
-        Returns a list of orientations, each containing scale kernels.
+        Caches precomputed frequency grids and kernels for O(1) repeated evaluation.
         """
-        # Frequency grid [-0.5, 0.5]
-        u1 = np.linspace(-0.5, 0.5, cols, endpoint=False)
-        u2 = np.linspace(-0.5, 0.5, rows, endpoint=False)
-        x, y = np.meshgrid(u1, u2)
-        
-        # FFT shift to align DC at (0, 0)
-        x = np.fft.ifftshift(x)
-        y = np.fft.ifftshift(y)
-        
-        radius = np.sqrt(x**2 + y**2)
-        theta = np.arctan2(-y, x)
-        
-        # Avoid log(0) singularity at DC
-        radius[0, 0] = 1.0
+        cache_key = (rows, cols)
+        if cache_key in self._filter_cache:
+            return self._filter_cache[cache_key]
+
+        if cache_key in self._grid_cache:
+            radius, theta = self._grid_cache[cache_key]
+        else:
+            # Frequency grid [-0.5, 0.5]
+            u1 = np.linspace(-0.5, 0.5, cols, endpoint=False)
+            u2 = np.linspace(-0.5, 0.5, rows, endpoint=False)
+            x, y = np.meshgrid(u1, u2)
+            
+            # FFT shift to align DC at (0, 0)
+            x = np.fft.ifftshift(x)
+            y = np.fft.ifftshift(y)
+            
+            radius = np.sqrt(x**2 + y**2)
+            theta = np.arctan2(-y, x)
+            radius[0, 0] = 1.0  # Avoid log(0) singularity at DC
+            self._grid_cache[cache_key] = (radius, theta)
         
         theta_sigma = np.pi / self.num_orientations / self.d_theta_on_sigma
         
@@ -101,6 +109,7 @@ class LogGaborFilterBank:
                 scale_filters.append(filt)
             filters.append(scale_filters)
             
+        self._filter_cache[cache_key] = filters
         return filters
 
 

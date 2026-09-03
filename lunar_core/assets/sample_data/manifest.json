@@ -1,0 +1,78 @@
+{
+  "version": "1.0.0",
+  "description": "Pre-bundled Chandrayaan-2 and NASA LRO mission evaluation datasets",
+  "benchmarks": {
+    "scenario_a": {
+      "id": "scenario_a",
+      "title": "Scenario A: Chandrayaan-2 OHRC vs NASA LRO NAC (Apollo 11 Landing Site)",
+      "target": "Mare Tranquillitatis (0.674\u00b0N, 23.473\u00b0E)",
+      "description": "Sub-meter cross-spacecraft optical registration between Chandrayaan-2 OHRC (0.25 m/px) and LRO NAC (0.50 m/px) over Tranquility Base.",
+      "source": {
+        "filename": "scenario_a_ohrc_apollo11.tif",
+        "spacecraft": "ISRO Chandrayaan-2 Orbiter",
+        "sensor": "OHRC (Orbiter High Resolution Camera)",
+        "gsd_m": 0.25,
+        "altitude_km": 100.0,
+        "sun_azimuth_deg": 72.5,
+        "sun_elevation_deg": 28.0
+      },
+      "reference": {
+        "filename": "scenario_a_lronac_apollo11.tif",
+        "spacecraft": "NASA Lunar Reconnaissance Orbiter (LRO)",
+        "sensor": "NAC (Narrow Angle Camera M102552876LE)",
+        "gsd_m": 0.5,
+        "altitude_km": 50.0,
+        "sun_azimuth_deg": 85.0,
+        "sun_elevation_deg": 33.5
+      }
+    },
+    "scenario_b": {
+      "id": "scenario_b",
+      "title": "Scenario B: Chandrayaan-2 TMC-2 Fore vs Nadir Stereo Baseline (Jackson Crater)",
+      "target": "Jackson Crater Terraces & Central Peak (22.40\u00b0N, 163.12\u00b0W)",
+      "description": "In-orbit stereo baseline photogrammetry between TMC-2 Fore (+26\u00b0 look angle) and Nadir (0\u00b0 look angle) with along-track parallax.",
+      "source": {
+        "filename": "scenario_b_tmc2_fore.tif",
+        "spacecraft": "ISRO Chandrayaan-2 Orbiter",
+        "sensor": "TMC-2 Fore Camera (+26\u00b0 look angle)",
+        "gsd_m": 5.0,
+        "altitude_km": 100.0,
+        "sun_azimuth_deg": 110.0,
+        "sun_elevation_deg": 42.0
+      },
+      "reference": {
+        "filename": "scenario_b_tmc2_nadir.tif",
+        "spacecraft": "ISRO Chandrayaan-2 Orbiter",
+        "sensor": "TMC-2 Nadir Camera (0\u00b0 look angle)",
+        "gsd_m": 5.0,
+        "altitude_km": 100.0,
+        "sun_azimuth_deg": 110.0,
+        "sun_elevation_deg": 42.0
+      }
+    },
+    "scenario_c": {
+      "id": "scenario_c",
+      "title": "Scenario C: Extreme Solar Lighting Disparity (Low Sun 12\u00b0 vs High Sun 65\u00b0)",
+      "target": "South Pole Shackleton Crater Rim (89.90\u00b0S)",
+      "description": "Severe radiometric test: grazing low-sun illumination (12\u00b0 elevation) with 60% crater floor cast shadows vs near-zenith high-sun illumination (65\u00b0 elevation).",
+      "source": {
+        "filename": "scenario_c_low_sun_12deg.tif",
+        "spacecraft": "ISRO Chandrayaan-2 Orbiter",
+        "sensor": "OHRC (Low Sun Twilight Orbit)",
+        "gsd_m": 0.35,
+        "altitude_km": 100.0,
+        "sun_azimuth_deg": 45.0,
+        "sun_elevation_deg": 12.0
+      },
+      "reference": {
+        "filename": "scenario_c_high_sun_65deg.tif",
+        "spacecraft": "NASA Lunar Reconnaissance Orbiter (LRO)",
+        "sensor": "NAC (High Sun Zenith Orbit)",
+        "gsd_m": 0.5,
+        "altitude_km": 50.0,
+        "sun_azimuth_deg": 225.0,
+        "sun_elevation_deg": 65.0
+      }
+    }
+  }
+}
