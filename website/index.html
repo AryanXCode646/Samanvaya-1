@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Samanvaya (समान्वय) — Autonomous Lunar Optical Image Registration Framework</title>
   <meta name="description" content="Production-grade multi-modal, sun-angle, and scale-invariant lunar image registration framework for ISRO Chandrayaan-2 (SIH PS 26166)." />
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="./css/style.css" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -29,6 +29,97 @@
       }
     }
   </script>
+  <style>
+    :root {
+      --bg-deep-space: #030712;
+      --bg-card: rgba(13, 19, 35, 0.72);
+      --border-glass: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(56, 189, 248, 0.35);
+      --cyan-primary: #38bdf8;
+    }
+    body {
+      background-color: #030712;
+      color: #f8fafc;
+      font-family: 'Inter', -apple-system, sans-serif;
+    }
+    .glass-card {
+      background: rgba(13, 19, 35, 0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .glass-card:hover {
+      border-color: rgba(56, 189, 248, 0.35);
+      box-shadow: 0 12px 40px -10px rgba(56, 189, 248, 0.15);
+    }
+    .gradient-title {
+      background: linear-gradient(135deg, #ffffff 15%, #cbd5e1 55%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .gradient-accent {
+      background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .cosmic-pill {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.12) 0%, rgba(99, 102, 241, 0.05) 100%);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+    }
+    .terminal-window {
+      background: #060911;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 1rem;
+    }
+    .terminal-header {
+      background: #0a0f1d;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .terminal-dots { display: flex; gap: 6px; }
+    .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-red { background: #f43f5e; }
+    .dot-yellow { background: #fbbf24; }
+    .dot-green { background: #10b981; }
+    .split-viewer {
+      position: relative;
+      overflow: hidden;
+      border-radius: 1rem;
+      user-select: none;
+    }
+    .split-layer-top {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 50%;
+      overflow: hidden;
+      border-right: 2px solid #38bdf8;
+      box-shadow: 2px 0 15px rgba(56, 189, 248, 0.4);
+    }
+    .split-handle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #38bdf8;
+      color: #04060a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      cursor: ew-resize;
+      z-index: 10;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.6);
+    }
+  </style>
 </head>
 <body class="bg-space-950 text-slate-100 min-h-screen">
 
