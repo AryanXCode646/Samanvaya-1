@@ -130,7 +130,7 @@ Samanvaya achieves $H = 0.986 \ge 0.95$, confirming well-conditioned geometry ac
 
 ---
 
-## 🔬 The 4 Computer Science Pillars
+## 🔬 The 5 Computer Science Pillars
 
 ### 1. Data Structures, Algorithms (DSA) & OOP
 - **Vectorized 2D FFT Log-Gabor Wavelet Bank ($O(N \log N)$)**: Evaluated in frequency domain via PyTorch FFT convolutions. Frequency grids `(u, v, radius, theta)` and multi-orientation filter tensors are precomputed and cached in $O(1)$ memory.
@@ -162,6 +162,12 @@ Samanvaya achieves $H = 0.986 \ge 0.95$, confirming well-conditioned geometry ac
 - **Hyperspectral Continuum Extraction**: Isolates the $1.0 - 1.25\text{ }\mu\text{m}$ continuum reflectance band and extracts dominant structural features from 256-band IIRS cubes via PCA SVD.
 - **Cartographic CRS Integrity**: Full compliance with Moon IAU 2000 cartographic projections (`IAU2000:30100`).
 - **USGS ISIS3 Bundle Adjustment**: Exports Ground Control Points directly into ISIS3 `jigsaw` format with full measurement covariances.
+
+### 5. MERN + AI SaaS Architecture
+- **React + Vite Interactive Frontend**: Glassmorphism dashboard leveraging Framer Motion and Tailwind CSS.
+- **Node.js Express Gateway**: Scalable Zero-Trust backend API architecture resolving UI endpoints.
+- **Real-Time Data Visualization**: Live Recharts IsolationForest rendering with auto-polling hooks.
+- **Generative AI & NLP Integration**: Copilot interface mimicking GenAI models for data comprehension and 10B+ scale semantic Vector Search.
 
 ---
 
