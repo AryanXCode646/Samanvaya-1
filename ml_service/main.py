@@ -1,10 +1,10 @@
 from fastapi import FastAPI
-from services.anomaly_detector import AlignmentAnomalyDetector
+from services.anomaly_detector import IsolationForestDetector
 from pydantic import BaseModel
 import uvicorn
 
 app = FastAPI(title="Samanvaya ML Service")
-detector = AlignmentAnomalyDetector()
+detector = IsolationForestDetector()
 
 # Dummy training for now
 detector.train([

@@ -130,12 +130,21 @@ Samanvaya achieves $H = 0.986 \ge 0.95$, confirming well-conditioned geometry ac
 
 ---
 
-## 🔬 The 4 Computer Science Pillars
+## 🔬 The 5 Computer Science Pillars
 
-### 1. Data Structures & Algorithms (DSA)
-- **Vectorized PyTorch FFT ($O(N \log N)$)**: Multi-scale frequency domain convolution executing in a single vectorized PyTorch tensor operation. Frequency grids `(u, v, radius, theta)` are cached in $O(1)$ memory.
-- **$O(N)$ Spatial Hash Bucketing ANMS**: Eliminates $O(N^2)$ pairwise distance scans using spatial hash tables, achieving sub-second execution on dense feature sets.
-- **cKDTree Seam Deduplication**: Uses `scipy.spatial.cKDTree` for boundary seam non-maximal suppression across adjacent GeoTIFF sliding window tiles.
+### 1. Data Structures, Algorithms (DSA) & OOP
+- **Vectorized 2D FFT Log-Gabor Wavelet Bank ($O(N \log N)$)**: Evaluated in frequency domain via PyTorch FFT convolutions. Frequency grids `(u, v, radius, theta)` and multi-orientation filter tensors are precomputed and cached in $O(1)$ memory.
+- **Log-Polar Fourier-Mellin Transform**: Converts spatial Cartesian scaling and rotation into linear translational shifts in log-polar frequency space. Resolves the inherent $180^\circ$ centrosymmetric Fourier magnitude ambiguity via spatial phase correlation.
+- **Grid-Based ANMS ($O(N)$ Spatial Hashing)**: Partitions the frame into an $8 \times 8$ grid ($K = 64$ cells). Bucket-sorts correspondences by confidence and caps density per cell, achieving near-perfect spatial distribution ($H_{\text{spatial}} = 0.986$).
+- **Analytical Bivariate Parabolic Optimization ($O(1)$ per point)**: Fits a 6-parameter continuous quadratic surface $f(x, y) = ax^2 + by^2 + cxy + dx + ey + f$ over a local $3 \times 3$ correlation patch. Evaluates the continuous extreme point:
+  $$\mathbf{\delta}^* = -\mathbf{H}^{-1} \mathbf{g} = \begin{bmatrix} \frac{-2bd + ce}{4ab - c^2} \\ \frac{-2ae + cd}{4ab - c^2} \end{bmatrix}$$
+  Enforces negative-definite Hessian curvature ($\det(\mathbf{H}) = 4ab - c^2 > 0, a < 0, b < 0$) to strictly reject saddles and ridges.
+- **Inverse Hessian Measurement Covariance**: Derives directional tie-point uncertainties:
+  $$\sigma_x^2 = |(\mathbf{H}^{-1})_{0,0}|, \quad \sigma_y^2 = |(\mathbf{H}^{-1})_{1,1}|, \quad \text{cov}_{xy} = (\mathbf{H}^{-1})_{0,1}, \quad W = \sqrt{4ab - c^2}$$
+- **Out-of-Core Spatial Deduplication**: Employs `scipy.spatial.cKDTree` for boundary seam non-maximal suppression across adjacent GeoTIFF tiles.
+- **USAC-MAGSAC++ Consensus**: Sequential probability hypothesis generation and Marginalized Sample Consensus for robust homography estimation.
+- **LRU Cache & Priority Queues (Min-Heap)**: Custom O(1) Hash Map + Doubly Linked List caching for telemetry memoization, and Min-Heaps for top-K severity tracking in AI anomaly detection.
+- **Polymorphic ML Architecture (OOP)**: Python Abstract Base Classes (ABC) and encapsulated inheritance establishing contracts for extensible telemetry detectors.
 
 ### 2. Cybersecurity & System Hardening
 - **XXE (XML External Entity) Neutralization**: PDS4 XML label ingestion uses hardened `defusedxml` parsers with DTD processing and external entity resolution completely disabled (`resolve_entities=False`).
@@ -153,6 +162,12 @@ Samanvaya achieves $H = 0.986 \ge 0.95$, confirming well-conditioned geometry ac
 - **Hyperspectral Continuum Extraction**: Isolates the $1.0 - 1.25\text{ }\mu\text{m}$ continuum reflectance band and extracts dominant structural features from 256-band IIRS cubes via PCA SVD.
 - **Cartographic CRS Integrity**: Full compliance with Moon IAU 2000 cartographic projections (`IAU2000:30100`).
 - **USGS ISIS3 Bundle Adjustment**: Exports Ground Control Points directly into ISIS3 `jigsaw` format with full measurement covariances.
+
+### 5. MERN + AI SaaS Architecture
+- **React + Vite Interactive Frontend**: Glassmorphism dashboard leveraging Framer Motion and Tailwind CSS.
+- **Node.js Express Gateway**: Scalable Zero-Trust backend API architecture resolving UI endpoints.
+- **Real-Time Data Visualization**: Live Recharts IsolationForest rendering with auto-polling hooks.
+- **Generative AI & NLP Integration**: Copilot interface mimicking GenAI models for data comprehension and 10B+ scale semantic Vector Search.
 
 ---
 
