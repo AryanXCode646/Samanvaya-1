@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  ch2-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ch2_lunar_reg_api
+    ports:
+      - "8000:8000"
+    command: ["python3", "-m", "ch2_lunar_reg.interfaces.cli", "serve", "--host", "0.0.0.0", "--port", "8000"]
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+
+  ch2-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ch2_lunar_reg_dashboard
+    ports:
+      - "8501:8501"
+    command: ["streamlit", "run", "ch2_lunar_reg/interfaces/dashboard.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - ch2-api
+    restart: unless-stopped
