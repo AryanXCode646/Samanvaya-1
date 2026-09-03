@@ -1,8 +1,8 @@
-<div align="center">
+﻿<div align="center">
 
-<img src="assets/hero_banner.png" alt="SAMANVAYA: ISRO Chandrayaan-2 Planetary Image Registration Header Banner" width="100%"/>
+<img src="docs/assets/hero_banner.png" alt="SAMANVAYA: ISRO Chandrayaan-2 Planetary Image Registration Header Banner" width="100%"/>
 
-# 🌙 SAMANVAYA (समान्वय)
+# ðŸŒ™ SAMANVAYA (à¤¸à¤®à¤¾à¤¨à¥à¤µà¤¯)
 ### Autonomous Multi-Modal, Sun-Angle, and Scale-Invariant Lunar Image Correspondence Framework
 
 [![ISRO SIH PS 26166](https://img.shields.io/badge/ISRO-SIH%20PS%2026166-0284c7?style=for-the-badge&logo=nasa&logoColor=white)](https://github.com/ashishsinghbora/Samanvaya)
@@ -19,16 +19,16 @@
   <i>"Multi-modal, Sun angle and scale invariant image correspondence using Chandrayaan-2 optical images (OHRC, TMC and IIRS)"</i>
 </p>
 
-[**Interactive Portal (Streamlit)**](http://localhost:8501) • [**Showcase Documentation & Wiki**](https://ashishsinghbora.github.io/Samanvaya/) • [**Architecture**](#-architecture-pipeline) • [**Quickstart**](#-quickstart--installation) • [**USGS ISIS3 Integration**](#-usgs-isis3--qgis-bundle-adjustment)
+[**Interactive Portal (Streamlit)**](http://localhost:8501) â€¢ [**Showcase Documentation & Wiki**](https://ashishsinghbora.github.io/Samanvaya/) â€¢ [**Architecture**](#-architecture-pipeline) â€¢ [**Quickstart**](#-quickstart--installation) â€¢ [**USGS ISIS3 Integration**](#-usgs-isis3--qgis-bundle-adjustment)
 
 </div>
 
 ---
 
-## 📖 Executive Summary & Mission Context
+## ðŸ“– Executive Summary & Mission Context
 
 Spaceborne optical imaging of the lunar surface presents severe photogrammetric challenges:
-1. **Atmosphereless 180° Solar Shadow Reversal**: Because the Moon has no atmosphere, solar shadows cast by crater rims and ridges are pitch-black voids with zero diffuse Rayleigh or Mie scattering. When registering orbital passes acquired at opposing sun angles (e.g., morning sun at Azimuth $60^\circ$ vs. afternoon sun at Azimuth $240^\circ$), illumination completely inverts. Standard intensity and gradient-based descriptors (SIFT, ORB, SURF, NCC) fail catastrophically because pixel intensities strongly anti-correlate ($\rho_{\text{raw}} = -0.9627$).
+1. **Atmosphereless 180Â° Solar Shadow Reversal**: Because the Moon has no atmosphere, solar shadows cast by crater rims and ridges are pitch-black voids with zero diffuse Rayleigh or Mie scattering. When registering orbital passes acquired at opposing sun angles (e.g., morning sun at Azimuth $60^\circ$ vs. afternoon sun at Azimuth $240^\circ$), illumination completely inverts. Standard intensity and gradient-based descriptors (SIFT, ORB, SURF, NCC) fail catastrophically because pixel intensities strongly anti-correlate ($\rho_{\text{raw}} = -0.9627$).
 2. **Extreme Multi-Modal Scale Disparities**: Chandrayaan-2 payloads possess wildly disparate Ground Sampling Distances (GSD):
    - **OHRC (Orbiter High Resolution Camera)**: $\sim 0.25\text{ m/pixel}$ (Sub-meter ultra-high resolution)
    - **TMC-2 (Terrain Mapping Camera-2)**: $\sim 5.0\text{ m/pixel}$ ($20\times$ scale ratio against OHRC)
@@ -39,30 +39,30 @@ Spaceborne optical imaging of the lunar surface presents severe photogrammetric 
 
 ---
 
-## ⚡ The "Proof-in-3-Seconds" Visual
+## âš¡ The "Proof-in-3-Seconds" Visual
 
 <div align="center">
-  <img src="assets/proof_in_3_seconds.png" alt="Proof-in-3-Seconds Empirical Composite Graphic" width="100%"/>
-  <p><i>Figure 1: Empirical verification demonstrating: (1) 180° shadow reversal raw failure (ρ = -0.9627); (2) Log-Gabor Phase Congruency step-edge structural invariance (ρ = +0.9295); (3) Registered 50/50 checkerboard overlay with sub-pixel tie-point quivers (RMSE = 0.283 px &lt; 0.40 px mandate).</i></p>
+  <img src="docs/assets/proof_in_3_seconds.png" alt="Proof-in-3-Seconds Empirical Composite Graphic" width="100%"/>
+  <p><i>Figure 1: Empirical verification demonstrating: (1) 180Â° shadow reversal raw failure (Ï = -0.9627); (2) Log-Gabor Phase Congruency step-edge structural invariance (Ï = +0.9295); (3) Registered 50/50 checkerboard overlay with sub-pixel tie-point quivers (RMSE = 0.283 px &lt; 0.40 px mandate).</i></p>
 </div>
 
 ---
 
-## 🎯 Quantitative Benchmark Scorecard (ISRO Mandate Verification)
+## ðŸŽ¯ Quantitative Benchmark Scorecard (ISRO Mandate Verification)
 
 | Evaluation Metric | Classical Baseline (SIFT / ORB) | LoFTR Baseline | **Samanvaya (This Framework)** | ISRO SIH Mandate | Verification Status |
 |---|---|---|---|---|---|
-| **Sub-Pixel Precision (RMSE)** | $> 5.20\text{ px}$ (Fails) | $0.850\text{ px}$ | **$0.283\text{ px}$** | $\mathbf{< 0.400\text{ px}}$ | **PASSED ✅** |
-| **180° Shadow Inversion Correlation** | $-0.9627$ (Anti-correlated) | $+0.4210$ | **$+0.9295$** ($M_{\max}$) | Physical Coincidence | **PASSED ✅** |
-| **Shannon Spatial Uniformity Entropy ($H$)** | $0.210$ (Rim Clumping) | $0.680$ | **$0.986$ / $1.000$** | Uniform Scene Coverage | **PASSED ✅** |
-| **GSD Scale Invariance Ratio** | $< 2\times$ | $\sim 4\times$ | **Up to $320\times$ (OHRC $\to$ TMC-2 $\to$ IIRS)** | Multi-Scale Cascade | **PASSED ✅** |
-| **Out-of-Core Processing** | OOM Crash (> 10k x 10k) | OOM Crash | **Bounded Memory ($\le 4\text{ GB}$ Streaming)** | Arbitrary Swath Size | **PASSED ✅** |
-| **Photogrammetric Bundle Covariance** | None | Ad-hoc | **Continuous Inverse Hessian $\mathbf{H}^{-1}$** | USGS ISIS3 Jigsaw | **PASSED ✅** |
-| **Automated Verification Suite** | None | Partial | **69 / 69 Tests 100% Passing** | Zero Regressions | **PASSED ✅** |
+| **Sub-Pixel Precision (RMSE)** | $> 5.20\text{ px}$ (Fails) | $0.850\text{ px}$ | **$0.283\text{ px}$** | $\mathbf{< 0.400\text{ px}}$ | **PASSED âœ…** |
+| **180Â° Shadow Inversion Correlation** | $-0.9627$ (Anti-correlated) | $+0.4210$ | **$+0.9295$** ($M_{\max}$) | Physical Coincidence | **PASSED âœ…** |
+| **Shannon Spatial Uniformity Entropy ($H$)** | $0.210$ (Rim Clumping) | $0.680$ | **$0.986$ / $1.000$** | Uniform Scene Coverage | **PASSED âœ…** |
+| **GSD Scale Invariance Ratio** | $< 2\times$ | $\sim 4\times$ | **Up to $320\times$ (OHRC $\to$ TMC-2 $\to$ IIRS)** | Multi-Scale Cascade | **PASSED âœ…** |
+| **Out-of-Core Processing** | OOM Crash (> 10k x 10k) | OOM Crash | **Bounded Memory ($\le 4\text{ GB}$ Streaming)** | Arbitrary Swath Size | **PASSED âœ…** |
+| **Photogrammetric Bundle Covariance** | None | Ad-hoc | **Continuous Inverse Hessian $\mathbf{H}^{-1}$** | USGS ISIS3 Jigsaw | **PASSED âœ…** |
+| **Automated Verification Suite** | None | Partial | **69 / 69 Tests 100% Passing** | Zero Regressions | **PASSED âœ…** |
 
 ---
 
-## 🏛️ Architecture Pipeline
+## ðŸ›ï¸ Architecture Pipeline
 
 ```mermaid
 flowchart TD
@@ -79,7 +79,7 @@ flowchart TD
     end
 
     subgraph S3["Stage 3: Multi-Modal Scale-Space & Transformer Matching"]
-        KM --> FM["Fourier-Mellin 180° Rotation & Scale Disambiguation"]
+        KM --> FM["Fourier-Mellin 180Â° Rotation & Scale Disambiguation"]
         FM --> HB["Hierarchical Scale Bridge (OHRC 0.25m -> TMC-2 5m -> IIRS 80m)"]
         HB --> TR["Dense LoFTR Cross-Attention Linear Transformer"]
     end
@@ -100,7 +100,7 @@ flowchart TD
 
 ---
 
-## 📐 Mathematical Formulation
+## ðŸ“ Mathematical Formulation
 
 ### 1. 3D DEM Lommel-Seeliger Photometric Scattering
 Lunar regolith exhibits strong backscattering without atmospheric diffusion. To eliminate crater rim burnout under low sun elevations, surface normals are derived continuously from Digital Elevation Models:
@@ -130,7 +130,7 @@ Samanvaya achieves $H = 0.986 \ge 0.95$, confirming well-conditioned geometry ac
 
 ---
 
-## 🔬 The 5 Computer Science Pillars
+## ðŸ”¬ The 5 Computer Science Pillars
 
 ### 1. Data Structures, Algorithms (DSA) & OOP
 - **Vectorized 2D FFT Log-Gabor Wavelet Bank ($O(N \log N)$)**: Evaluated in frequency domain via PyTorch FFT convolutions. Frequency grids `(u, v, radius, theta)` and multi-orientation filter tensors are precomputed and cached in $O(1)$ memory.
@@ -171,7 +171,7 @@ Samanvaya achieves $H = 0.986 \ge 0.95$, confirming well-conditioned geometry ac
 
 ---
 
-## ⚡ Quickstart & Installation
+## âš¡ Quickstart & Installation
 
 ### Option 1: Using `make` (Recommended)
 ```bash
@@ -196,7 +196,7 @@ docker compose up --build
 
 ---
 
-## 💻 CLI & Python SDK Usage
+## ðŸ’» CLI & Python SDK Usage
 
 ### Global Command-Line Interface (`samanvaya`)
 ```bash
@@ -259,7 +259,7 @@ PlanetaryRasterWriter.export_gcp_csv(
 
 ---
 
-## 🗺️ USGS ISIS3 & QGIS Bundle Adjustment
+## ðŸ—ºï¸ USGS ISIS3 & QGIS Bundle Adjustment
 
 Samanvaya directly exports tie-points into the column format required by the United States Geological Survey (USGS) **ISIS3 `jigsaw`** photogrammetric bundle adjustment tool:
 
@@ -274,71 +274,71 @@ gcp_id,pixel_ref,line_ref,pixel_tgt,line_tgt,geo_x,geo_y,residual_px,confidence,
 
 ---
 
-## 📂 Repository Structure
+## ðŸ“‚ Repository Structure
 
 ```
 Samanvaya/
-├── lunar_core/                    # Core Clean Architecture Framework
-│   ├── data_io/                  # Hardened GeoTIFF, PDS4 XML, TileProcessor, and GCP Exporters
-│   │   ├── raster_reader.py      # DefusedXML parser & Decompression Bomb Shields
-│   │   ├── raster_writer.py      # GeoTIFF & ISIS3 Jigsaw GCP Exporter with Covariances
-│   │   └── tile_processor.py     # Out-of-Core Windowed Processing for Massive Full-Swaths
-│   ├── preprocessing/            # Phase Congruency, Lommel-Seeliger, 3D DEM Norm & Spectral PCA
-│   │   ├── phase_congruency.py   # Cached Vectorized PyTorch/Kornia Log-Gabor Engine
-│   │   ├── photometric.py        # 3D DEM Surface Normal & Lommel-Seeliger Normalizer
-│   │   └── spectral.py           # IIRS Continuum Extraction & PCA Compression
-│   ├── alignment/                # LoFTR Dense Matcher, Scale-Space & Fourier-Mellin
-│   │   ├── dense_matcher.py      # Kornia LoFTR Backbone with Taylor 2D Refinement
-│   │   ├── scale_space.py        # Hierarchical 320x Multi-Modal Bridge (OHRC->TMC2->IIRS)
-│   │   └── fourier_mellin.py     # 180° Invariant Fourier-Mellin Global Alignment
-│   ├── postprocessing/           # Sub-Pixel ABCs, 8x8 ANMS & USAC-MAGSAC++
-│   │   ├── subpixel.py           # SubpixelRefinerBase, ParabolicHessianRefiner & Covariances
-│   │   ├── anms.py               # O(N) Spatial Hashing ANMS & Shannon Entropy
-│   │   └── magsac.py             # OpenCV USAC-MAGSAC++ Consensus Estimator
-│   ├── evaluation/               # Sub-Pixel RMSE, Spatial Entropy & Visual Diagnostics
-│   │   └── metrics.py            # EvaluationEngine & Publication-Quality Scatter Plotter
-│   ├── ui/                       # Streamlit Interactive Planetary Portal (app.py)
-│   ├── assets/sample_data/       # Bundled Real Orbital Benchmark GeoTIFFs (Apollo 11, Jackson)
-│   ├── cli.py                    # Unified 'samanvaya' CLI Entrypoint
-│   └── pipeline.py               # End-to-End Clean Architecture Mission Facade
-│
-├── ch2_lunar_reg/                 # Domain, Application & Infrastructure Subsystems
-│   ├── domain/                   # Photometric Regolith Models, Affine/Homography Solvers
-│   ├── application/              # Scale-Space Localizer, Robust Matcher
-│   ├── infrastructure/           # Synthetic Lunar Crater Generator & PDS4 Parser
-│   └── interfaces/               # FastAPI REST Backend (api.py) & Secondary Dashboard
-│
-├── docs/                          # GitHub Pages Single Source of Truth Web Portal
-│   ├── index.html                # Interactive Showcase Landing Page
-│   ├── wiki.html                 # Comprehensive Theoretical Documentation
-│   ├── benchmarks.html           # Full Mission Benchmark Verification Portal
-│   ├── css/                      # Responsive Modern CSS Design System
-│   ├── js/                       # Interactive Simulators & Dynamic Visualizers
-│   └── assets/                   # High-Resolution Verification Visual Artifacts
-│
-├── tests/                         # Comprehensive Verification Suite (69/69 Tests Passing)
-│   ├── test_dense_loftr_matcher.py
-│   ├── test_evaluation_metrics.py
-│   ├── test_phase_congruency_visual.py
-│   ├── test_tile_processor.py    # 4096x4096 Out-of-Core Window Verification
-│   ├── test_iirs_alignment.py    # 320x Hierarchical Multi-Modal Scale Bridge Tests
-│   ├── test_photometric_dem.py   # 3D DEM Slope Gradient Normalization Tests
-│   ├── test_subpixel.py          # Hessian Inverse Covariance & ISIS3 Export Tests
-│   ├── test_ui_benchmarks.py     # Bundled Orbital Presets Verification
-│   └── test_security_and_optimizations.py # XXE, Traversal & DSA Optimization Tests
-│
-├── assets/                        # Hero Banner, Proof Graphic & Visual Figures
-├── Dockerfile                     # Multi-Stage Container (GDAL + PyTorch + OpenCV)
-├── docker-compose.yml             # Microservices Mesh (API + Streamlit UI)
-├── Makefile                       # Automation Targets (install, run, test, clean)
-├── install.sh                     # Standalone Zero-Dependency Installer
-├── pyproject.toml                 # Modern Build System Configuration
-└── requirements.txt               # Locked Core Dependencies
+â”œâ”€â”€ lunar_core/                    # Core Clean Architecture Framework
+â”‚   â”œâ”€â”€ data_io/                  # Hardened GeoTIFF, PDS4 XML, TileProcessor, and GCP Exporters
+â”‚   â”‚   â”œâ”€â”€ raster_reader.py      # DefusedXML parser & Decompression Bomb Shields
+â”‚   â”‚   â”œâ”€â”€ raster_writer.py      # GeoTIFF & ISIS3 Jigsaw GCP Exporter with Covariances
+â”‚   â”‚   â””â”€â”€ tile_processor.py     # Out-of-Core Windowed Processing for Massive Full-Swaths
+â”‚   â”œâ”€â”€ preprocessing/            # Phase Congruency, Lommel-Seeliger, 3D DEM Norm & Spectral PCA
+â”‚   â”‚   â”œâ”€â”€ phase_congruency.py   # Cached Vectorized PyTorch/Kornia Log-Gabor Engine
+â”‚   â”‚   â”œâ”€â”€ photometric.py        # 3D DEM Surface Normal & Lommel-Seeliger Normalizer
+â”‚   â”‚   â””â”€â”€ spectral.py           # IIRS Continuum Extraction & PCA Compression
+â”‚   â”œâ”€â”€ alignment/                # LoFTR Dense Matcher, Scale-Space & Fourier-Mellin
+â”‚   â”‚   â”œâ”€â”€ dense_matcher.py      # Kornia LoFTR Backbone with Taylor 2D Refinement
+â”‚   â”‚   â”œâ”€â”€ scale_space.py        # Hierarchical 320x Multi-Modal Bridge (OHRC->TMC2->IIRS)
+â”‚   â”‚   â””â”€â”€ fourier_mellin.py     # 180Â° Invariant Fourier-Mellin Global Alignment
+â”‚   â”œâ”€â”€ postprocessing/           # Sub-Pixel ABCs, 8x8 ANMS & USAC-MAGSAC++
+â”‚   â”‚   â”œâ”€â”€ subpixel.py           # SubpixelRefinerBase, ParabolicHessianRefiner & Covariances
+â”‚   â”‚   â”œâ”€â”€ anms.py               # O(N) Spatial Hashing ANMS & Shannon Entropy
+â”‚   â”‚   â””â”€â”€ magsac.py             # OpenCV USAC-MAGSAC++ Consensus Estimator
+â”‚   â”œâ”€â”€ evaluation/               # Sub-Pixel RMSE, Spatial Entropy & Visual Diagnostics
+â”‚   â”‚   â””â”€â”€ metrics.py            # EvaluationEngine & Publication-Quality Scatter Plotter
+â”‚   â”œâ”€â”€ ui/                       # Streamlit Interactive Planetary Portal (app.py)
+â”‚   â”œâ”€â”€ assets/sample_data/       # Bundled Real Orbital Benchmark GeoTIFFs (Apollo 11, Jackson)
+â”‚   â”œâ”€â”€ cli.py                    # Unified 'samanvaya' CLI Entrypoint
+â”‚   â””â”€â”€ pipeline.py               # End-to-End Clean Architecture Mission Facade
+â”‚
+â”œâ”€â”€ ch2_lunar_reg/                 # Domain, Application & Infrastructure Subsystems
+â”‚   â”œâ”€â”€ domain/                   # Photometric Regolith Models, Affine/Homography Solvers
+â”‚   â”œâ”€â”€ application/              # Scale-Space Localizer, Robust Matcher
+â”‚   â”œâ”€â”€ infrastructure/           # Synthetic Lunar Crater Generator & PDS4 Parser
+â”‚   â””â”€â”€ interfaces/               # FastAPI REST Backend (api.py) & Secondary Dashboard
+â”‚
+â”œâ”€â”€ docs/                          # GitHub Pages Single Source of Truth Web Portal
+â”‚   â”œâ”€â”€ index.html                # Interactive Showcase Landing Page
+â”‚   â”œâ”€â”€ wiki.html                 # Comprehensive Theoretical Documentation
+â”‚   â”œâ”€â”€ benchmarks.html           # Full Mission Benchmark Verification Portal
+â”‚   â”œâ”€â”€ css/                      # Responsive Modern CSS Design System
+â”‚   â”œâ”€â”€ js/                       # Interactive Simulators & Dynamic Visualizers
+â”‚   â””â”€â”€ assets/                   # High-Resolution Verification Visual Artifacts
+â”‚
+â”œâ”€â”€ tests/                         # Comprehensive Verification Suite (69/69 Tests Passing)
+â”‚   â”œâ”€â”€ test_dense_loftr_matcher.py
+â”‚   â”œâ”€â”€ test_evaluation_metrics.py
+â”‚   â”œâ”€â”€ test_phase_congruency_visual.py
+â”‚   â”œâ”€â”€ test_tile_processor.py    # 4096x4096 Out-of-Core Window Verification
+â”‚   â”œâ”€â”€ test_iirs_alignment.py    # 320x Hierarchical Multi-Modal Scale Bridge Tests
+â”‚   â”œâ”€â”€ test_photometric_dem.py   # 3D DEM Slope Gradient Normalization Tests
+â”‚   â”œâ”€â”€ test_subpixel.py          # Hessian Inverse Covariance & ISIS3 Export Tests
+â”‚   â”œâ”€â”€ test_ui_benchmarks.py     # Bundled Orbital Presets Verification
+â”‚   â””â”€â”€ test_security_and_optimizations.py # XXE, Traversal & DSA Optimization Tests
+â”‚
+â”œâ”€â”€ assets/                        # Hero Banner, Proof Graphic & Visual Figures
+â”œâ”€â”€ Dockerfile                     # Multi-Stage Container (GDAL + PyTorch + OpenCV)
+â”œâ”€â”€ docker-compose.yml             # Microservices Mesh (API + Streamlit UI)
+â”œâ”€â”€ Makefile                       # Automation Targets (install, run, test, clean)
+â”œâ”€â”€ install.sh                     # Standalone Zero-Dependency Installer
+â”œâ”€â”€ pyproject.toml                 # Modern Build System Configuration
+â””â”€â”€ requirements.txt               # Locked Core Dependencies
 ```
 
 ---
 
-## 🧪 Verification & Testing
+## ðŸ§ª Verification & Testing
 
 Every algorithm in Samanvaya is verified against synthetic and real planetary datasets:
 
@@ -384,56 +384,56 @@ tests/test_security_and_optimizations.py::TestCybersecurityHardening::test_geoti
 
 ---
 
-## 🚀 New in v2.0.0 — Enterprise Defense-Grade Edition
+## ðŸš€ New in v2.0.0 â€” Enterprise Defense-Grade Edition
 
-> All features below are **additive** — the entire original v1.x pipeline is fully preserved.
+> All features below are **additive** â€” the entire original v1.x pipeline is fully preserved.
 
-### 🛡️ Zero-Trust Security Layer (`src/security/`)
+### ðŸ›¡ï¸ Zero-Trust Security Layer (`src/security/`)
 
 | Module | What It Does |
 |---|---|
-| `file_validator.py` | Magic-byte GeoTIFF/PDS4/FITS verification, pixel-bomb rejection (max 50k×50k, 4 GiB), XXE-safe PDS4 XML via `defusedxml`, path traversal prevention, UUID filename remapping |
-| `audit.py` | **Merkle hash chain** append-only audit ledger — every action is cryptographically linked via `SHA-256(prev_hash + JSON(payload))`. Tamper-evident, verifiable with `verify_chain()` |
+| `file_validator.py` | Magic-byte GeoTIFF/PDS4/FITS verification, pixel-bomb rejection (max 50kÃ—50k, 4 GiB), XXE-safe PDS4 XML via `defusedxml`, path traversal prevention, UUID filename remapping |
+| `audit.py` | **Merkle hash chain** append-only audit ledger â€” every action is cryptographically linked via `SHA-256(prev_hash + JSON(payload))`. Tamper-evident, verifiable with `verify_chain()` |
 | `auth.py` | **RS256 asymmetric JWT** (15-min access + 7-day refresh), `UserRole` RBAC (VIEWER / OPERATOR / ADMINISTRATOR), Redis sliding-window rate limiter with in-memory fallback, HTTP `SECURITY_HEADERS` (CSP, HSTS, X-Frame-Options) |
 
-### ⚙️ Defense-Grade FastAPI Backend (`src/api/`)
+### âš™ï¸ Defense-Grade FastAPI Backend (`src/api/`)
 
 - **`server.py`**: Zero-trust FastAPI app factory with security headers middleware, per-route rate limiter (10 req/min for `/auth`), structured JSON logging, `/health` endpoint with live audit chain verification
 - **`routes/auth.py`**: RS256 login/refresh/logout with HttpOnly cookie refresh tokens
 - **`routes/jobs.py`**: Celery job submission, Server-Sent Events (SSE) log streaming, GPU telemetry
 - **`routes/viewer.py`**: Tile and PDF report delivery with `_get_safe_path()` LFI/RFI prevention
 
-### 🔬 Mathematical Algorithms (`src/features/`, `src/matching/`, `src/registration/`)
+### ðŸ”¬ Mathematical Algorithms (`src/features/`, `src/matching/`, `src/registration/`)
 
 | Module | Algorithm |
 |---|---|
-| `phase_congruency.py` | Full 2D **Log-Gabor filter bank** — oriented frequency-domain filters, dynamic noise estimation, sun-angle-invariant PC map, orientation map, and edge/corner feature type |
-| `quadtree.py` | Recursive **Quad-Tree ANMS** — subdivides spatial domain, round-robin leaf extraction guarantees uniform GCP coverage across all 4 quadrants |
-| `warper.py` | **Sub-Pixel Gaussian surface interpolation** via 2D discrete Hessian on 3×3 patch (< 0.1 px accuracy); **Thin-Plate Spline + Multi-Quadric RBF** non-linear warp with dense Lanczos-4 interpolation via `cv2.remap` |
+| `phase_congruency.py` | Full 2D **Log-Gabor filter bank** â€” oriented frequency-domain filters, dynamic noise estimation, sun-angle-invariant PC map, orientation map, and edge/corner feature type |
+| `quadtree.py` | Recursive **Quad-Tree ANMS** â€” subdivides spatial domain, round-robin leaf extraction guarantees uniform GCP coverage across all 4 quadrants |
+| `warper.py` | **Sub-Pixel Gaussian surface interpolation** via 2D discrete Hessian on 3Ã—3 patch (< 0.1 px accuracy); **Thin-Plate Spline + Multi-Quadric RBF** non-linear warp with dense Lanczos-4 interpolation via `cv2.remap` |
 
-### 🤖 Optimized ML Anomaly Detector (`ml_service/`)
+### ðŸ¤– Optimized ML Anomaly Detector (`ml_service/`)
 
 | Optimization | Detail |
 |---|---|
-| **Vectorized batch predict** | `predict_batch()` — single `float32` matrix → ONE `model.predict()` call → **50× faster** |
-| **Multi-core training** | `n_jobs=-1` parallelism, `n_estimators=50` (2× faster training) |
+| **Vectorized batch predict** | `predict_batch()` â€” single `float32` matrix â†’ ONE `model.predict()` call â†’ **50Ã— faster** |
+| **Multi-core training** | `n_jobs=-1` parallelism, `n_estimators=50` (2Ã— faster training) |
 | **float32 features** | Halves RAM usage during training and inference |
-| **joblib persistence** | Model persisted to disk — **zero retraining cost** on warm restart |
+| **joblib persistence** | Model persisted to disk â€” **zero retraining cost** on warm restart |
 | **Warm-up inference** | Dummy predict on startup eliminates cold-start latency |
 | **Richer training data** | 500 synthetic normal + 25 anomaly samples (was: 2 hardcoded samples) |
-| **GZip middleware** | All responses compressed — ~65% bandwidth reduction |
+| **GZip middleware** | All responses compressed â€” ~65% bandwidth reduction |
 | **Async endpoints** | Non-blocking `async def` + `run_in_executor` for I/O concurrency |
-| **Batch prediction endpoint** | `POST /api/predict_batch` — up to 256 samples per call |
+| **Batch prediction endpoint** | `POST /api/predict_batch` â€” up to 256 samples per call |
 
-### 🖥️ Low-End PC Hardware Optimizer (`src/core/optimizer.py`)
+### ðŸ–¥ï¸ Low-End PC Hardware Optimizer (`src/core/optimizer.py`)
 
-Automatically detects available RAM and CPU cores at startup. On constrained systems (< 4 GB RAM or ≤ 4 cores):
+Automatically detects available RAM and CPU cores at startup. On constrained systems (< 4 GB RAM or â‰¤ 4 cores):
 - Caps `cv2.setNumThreads()` to prevent CPU thrashing
 - Limits `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS`, `MKL_NUM_THREADS`
-- Reduces Phase Congruency filter bank from 24 FFTs → 12 FFTs (saves ~50% CPU and RAM)
-- All features remain fully active — only computational intensity is scaled
+- Reduces Phase Congruency filter bank from 24 FFTs â†’ 12 FFTs (saves ~50% CPU and RAM)
+- All features remain fully active â€” only computational intensity is scaled
 
-### 🎛️ Interactive GCP Visualizer Dashboard (`src/ui/app.py`)
+### ðŸŽ›ï¸ Interactive GCP Visualizer Dashboard (`src/ui/app.py`)
 
 Full Streamlit dashboard for evaluating registration results:
 - **Split-screen view**: Reference vs Source image side-by-side
@@ -442,12 +442,12 @@ Full Streamlit dashboard for evaluating registration results:
 - **Alpha-blend composite**: Registered overlay for visual quality assessment
 - **Live backend health**: API status + Merkle audit chain integrity from sidebar
 
-### 🐳 Zero-Trust Container Architecture (`docker/`)
+### ðŸ³ Zero-Trust Container Architecture (`docker/`)
 
 - **`Dockerfile.backend`**: Multi-stage build, non-root `samanvaya` user, read-only filesystem
 - **`docker-compose.yml`**: Isolated bridge networks (`frontend-net` / `internal-net`), `read_only: true` mounts, `no-new-privileges:true` seccomp hardening
 
-### 🚀 One-Command Launchers
+### ðŸš€ One-Command Launchers
 
 ```powershell
 # Windows
@@ -461,26 +461,26 @@ npm start   # or: make dev
 ```
 
 Starts all 3 microservices concurrently:
-- 🟡 ML FastAPI → http://localhost:8001
-- 🟣 Node.js Gateway → http://localhost:3000
-- 🟢 React Dashboard → http://localhost:5173
+- ðŸŸ¡ ML FastAPI â†’ http://localhost:8001
+- ðŸŸ£ Node.js Gateway â†’ http://localhost:3000
+- ðŸŸ¢ React Dashboard â†’ http://localhost:5173
 
-### 📊 Updated Repository Structure (v2.0.0)
+### ðŸ“Š Updated Repository Structure (v2.0.0)
 
 ```
 src/
-├── security/          # Zero-trust auth, Merkle audit, file validation
-├── features/          # Phase Congruency Log-Gabor engine
-├── matching/          # Quad-Tree ANMS
-├── registration/      # Sub-Pixel Gaussian + TPS Non-Linear Warper
-├── api/               # FastAPI server + RBAC routes
-├── core/              # Pydantic config, exceptions, HW optimizer
-└── ui/                # Streamlit GCP Visualizer
+â”œâ”€â”€ security/          # Zero-trust auth, Merkle audit, file validation
+â”œâ”€â”€ features/          # Phase Congruency Log-Gabor engine
+â”œâ”€â”€ matching/          # Quad-Tree ANMS
+â”œâ”€â”€ registration/      # Sub-Pixel Gaussian + TPS Non-Linear Warper
+â”œâ”€â”€ api/               # FastAPI server + RBAC routes
+â”œâ”€â”€ core/              # Pydantic config, exceptions, HW optimizer
+â””â”€â”€ ui/                # Streamlit GCP Visualizer
 ```
 
 ---
 
-## 📜 License & Citation
+## ðŸ“œ License & Citation
 
 This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
 

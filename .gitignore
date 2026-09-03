@@ -1,18 +1,23 @@
-﻿# Virtual Environments
-venv/
-.venv/
-antigravity_ai/venv/
-env/
-ENV/
+# ============================================================
+# Samanvaya — .gitignore (Clean & Comprehensive)
+# ============================================================
 
-# Python Cache & Bytecode
+# --- Python ---
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
 
-# Distribution & Packaging
+# --- Virtual Environments ---
+venv/
+.venv/
+env/
+ENV/
+ml_service/venv/
+antigravity_ai/venv/
+
+# --- Distribution & Packaging ---
 build/
 develop-eggs/
 dist/
@@ -28,29 +33,75 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
-# Testing & Linting
+# --- Testing & Coverage ---
 .pytest_cache/
 .coverage
+.coverage.*
 htmlcov/
 .tox/
 .nox/
+coverage.xml
+*.cover
+nosetests.xml
+test-results/
 
-# Temporary Files
-tests/temp_*
+# --- Editors & IDEs ---
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+
+# --- OS Junk ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Temporary Files ---
 *.tmp
 *.log
-.DS_Store
+*.bak
+*.orig
+tests/temp_*
 
-# PyTorch Checkpoint Cache (weights will auto-download or load from ~/.cache)
+# --- ML Model Weights & Checkpoints ---
 *.ckpt
 *.pth
+*.pt
+data/isolation_forest.joblib
 
-# Node
+# --- Node ---
 node_modules/
-.env
-ml_service/venv/
-node_modules/
-ml_service/venv/
-.env
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
+# --- Environment Variables ---
+.env
+.env.*
+!.env.example
+
+# --- Secrets ---
+*.pem
+*.key
+*.p12
+*.pfx
+
+# --- Docker ---
+.dockerignore
+
+# --- Data & Audit Logs (never commit) ---
+data/audit/
+data/pipeline/
+data/workspace/
+
+# --- C++ Build Artifacts ---
+csrc/build/
+*.o
+*.a
+*.dll
+*.dylib
