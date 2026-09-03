@@ -1,4 +1,4 @@
-# Virtual Environments
+﻿# Virtual Environments
 venv/
 .venv/
 antigravity_ai/venv/
@@ -45,3 +45,12 @@ tests/temp_*
 # PyTorch Checkpoint Cache (weights will auto-download or load from ~/.cache)
 *.ckpt
 *.pth
+
+# Node
+node_modules/
+.env
+ml_service/venv/
+node_modules/
+ml_service/venv/
+.env
+
