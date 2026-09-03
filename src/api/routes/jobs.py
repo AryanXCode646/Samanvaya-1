@@ -86,10 +86,16 @@ async def stream_logs(job_id: str) -> StreamingResponse:
 
     async def event_generator():
         # Simulated log stream — replace with Redis pub/sub in production
+        from src.core.optimizer import HardwareOptimizer
+        
+        pc_params = HardwareOptimizer.get_phase_congruency_params()
+        scales = pc_params["num_scales"]
+        ori = pc_params["num_orientations"]
+        
         for i, msg in enumerate([
             "Validating input rasters via FileValidator...",
             "Applying CLAHE radiometric equalization...",
-            "Running Phase Congruency Engine (6 orientations × 4 scales)...",
+            f"Running Phase Congruency Engine ({ori} orientations × {scales} scales)...",
             "Generating shadow mask (Otsu + active contour)...",
             "ASIFT multi-scale pyramid matching...",
             "QuadTree ANMS: enforcing 8×8 spatial distribution...",

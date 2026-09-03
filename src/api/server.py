@@ -39,12 +39,20 @@ _rate_limiter: RateLimiter | None = None
 _audit_ledger: AuditLedger | None = None
 
 
+from src.core.optimizer import HardwareOptimizer
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup/shutdown lifecycle."""
     global _auth_manager, _rate_limiter, _audit_ledger
 
     logger.info("Samanvaya API starting up")
+    
+    # -------------------------------------------------------------
+    # Low-End PC Hardware Optimization Check
+    # -------------------------------------------------------------
+    HardwareOptimizer.apply_low_end_optimizations()
+    
     _auth_manager = AuthManager(SecurityConfig())
     _rate_limiter = RateLimiter(max_requests=60, window_seconds=60)
     _audit_ledger = AuditLedger(Path("data/audit/ledger.jsonl"))
@@ -53,6 +61,7 @@ async def lifespan(app: FastAPI):
     app.state.auth    = _auth_manager
     app.state.limiter = _rate_limiter
     app.state.audit   = _audit_ledger
+    app.state.optimizer = HardwareOptimizer
 
     yield
 
