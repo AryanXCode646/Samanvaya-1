@@ -4,11 +4,43 @@ Sub-Pixel Peak Estimator via Analytical 2D Bivariate Quadratic Patches.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import List, Optional, Tuple
 import cv2
 import numpy as np
 
 from lunar_core.models import KeypointMatch
+
+
+@dataclass
+class SubpixelSurfaceFit:
+    """
+    Result of continuous 2D quadratic patch fitting.
+    Supports backward-compatible tuple unpacking: dx, dy, peak_val = fit
+    """
+    dx: float
+    dy: float
+    peak_val: float
+    sigma_x: float
+    sigma_y: float
+    cov_xy: float
+    weight: float
+
+    def __iter__(self):
+        yield self.dx
+        yield self.dy
+        yield self.peak_val
+
+    def as_tuple(self) -> Tuple[float, float, float, float, float, float, float]:
+        return (
+            self.dx,
+            self.dy,
+            self.peak_val,
+            self.sigma_x,
+            self.sigma_y,
+            self.cov_xy,
+            self.weight,
+        )
 
 
 class AnalyticalSubpixelRefiner:
@@ -22,11 +54,15 @@ class AnalyticalSubpixelRefiner:
         dy* = (-2*a*e + c*d) / (4*a*b - c^2)
         
     Enforces negative definiteness (strict maximum): a < 0, b < 0, 4*a*b - c^2 > 0.
+    Derives continuous measurement covariance:
+        H_inv = [[2a, c], [c, 2b]]^-1
+        sigma_x^2 = abs(H_inv[0, 0]), sigma_y^2 = abs(H_inv[1, 1]), sigma_xy = H_inv[0, 1]
+        weight = sqrt(4*a*b - c^2)
     Achieves target RMSE < 0.40 pixels.
     """
 
     @staticmethod
-    def fit_quadratic_surface(patch_3x3: np.ndarray) -> Optional[Tuple[float, float, float]]:
+    def fit_quadratic_surface(patch_3x3: np.ndarray) -> Optional[SubpixelSurfaceFit]:
         if patch_3x3.shape != (3, 3):
             raise ValueError(f"Expected 3x3 patch, got {patch_3x3.shape}")
 
@@ -59,7 +95,29 @@ class AnalyticalSubpixelRefiner:
             return None
 
         peak_val = a * dx**2 + b * dy**2 + c * dx * dy + d * dx + e * dy + f
-        return float(dx), float(dy), float(peak_val)
+
+        # Inverse Hessian matrix H_inv = [[2a, c], [c, 2b]]^-1
+        # H_inv = (1 / det_h) * [[2b, -c], [-c, 2a]]
+        inv_h00 = (2.0 * b) / det_h
+        inv_h11 = (2.0 * a) / det_h
+        inv_h01 = -c / det_h
+
+        sigma_x2 = abs(inv_h00)
+        sigma_y2 = abs(inv_h11)
+        sigma_x = float(np.sqrt(sigma_x2))
+        sigma_y = float(np.sqrt(sigma_y2))
+        cov_xy = float(inv_h01)
+        weight = float(np.sqrt(det_h))
+
+        return SubpixelSurfaceFit(
+            dx=float(dx),
+            dy=float(dy),
+            peak_val=float(peak_val),
+            sigma_x=sigma_x,
+            sigma_y=sigma_y,
+            cov_xy=cov_xy,
+            weight=weight,
+        )
 
     def compute_local_ncc_surface(
         self,
@@ -147,6 +205,10 @@ class AnalyticalSubpixelRefiner:
                             confidence=m.confidence,
                             subpixel_refined=True,
                             residual_error=m.residual_error,
+                            sigma_x=fit.sigma_x,
+                            sigma_y=fit.sigma_y,
+                            cov_xy=fit.cov_xy,
+                            weight=fit.weight,
                         )
                     )
                     continue
