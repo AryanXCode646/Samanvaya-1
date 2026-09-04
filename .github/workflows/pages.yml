@@ -43,8 +43,8 @@ jobs:
 
       - name: Ensure documentation pages and assets are bundled
         run: |
-          cp -r ../docs/wiki.html ../docs/benchmarks.html ../docs/assets ./dist/
-          cp ../docs/index.html ./dist/overview.html
+          mv ./dist/index.html ./dist/dashboard.html
+          cp -r ../docs/* ./dist/
           touch ./dist/.nojekyll
         working-directory: frontend
 

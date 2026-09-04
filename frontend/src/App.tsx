@@ -65,10 +65,10 @@ function App() {
 
         <nav className="flex items-center flex-wrap gap-2 text-xs font-mono">
           <a
-            href="./overview.html"
+            href="./index.html"
             className="px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-cyan-400 border border-cyan-500/30 transition-colors flex items-center gap-1.5"
           >
-            <span>🔬 4-Mode Inspector</span>
+            <span>🏠 Home &amp; Slider</span>
           </a>
           <a
             href="./wiki.html"
