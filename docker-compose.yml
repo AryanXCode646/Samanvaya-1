@@ -1,92 +1,49 @@
 # docker-compose.yml
-# Samanvaya Production Deployment Architecture
-# Zero-trust networking, isolated bridge networks, and security boundaries.
-
-version: "3.8"
+# Samanvaya Containerized Microservices Stack
+# ISRO Chandrayaan-2 Planetary Remote Sensing Correspondence Framework (SIH PS 26166)
 
 services:
-  backend-api:
+  api:
     build:
       context: .
-      dockerfile: docker/Dockerfile.backend
-    image: samanvaya/backend:latest
-    container_name: samanvaya-backend
+      dockerfile: Dockerfile
+    image: samanvaya/api:latest
+    container_name: samanvaya-api
     restart: unless-stopped
     ports:
       - "8000:8000"
+    command: ["python3", "-m", "ch2_lunar_reg.interfaces.cli", "serve", "--port", "8000"]
     networks:
-      - frontend-net
-      - internal-net
-    depends_on:
-      redis:
-        condition: service_healthy
+      - samanvaya-net
     security_opt:
       - no-new-privileges:true
-      # Requires a pre-configured seccomp profile in production
-      # - seccomp=docker/seccomp-profile.json 
-    read_only: true
     tmpfs:
       - /tmp
-    volumes:
-      - audit_logs:/app/data/audit
     environment:
       - ENVIRONMENT=production
-      - REDIS_URL=redis://redis:6379/0
+      - API_PORT=8000
 
-  celery-worker:
+  portal:
     build:
       context: .
-      dockerfile: docker/Dockerfile.backend
-    image: samanvaya/backend:latest
-    container_name: samanvaya-worker
+      dockerfile: Dockerfile
+    image: samanvaya/portal:latest
+    container_name: samanvaya-portal
     restart: unless-stopped
-    command: ["celery", "-A", "src.jobs.celery_app", "worker", "--loglevel=info"]
+    ports:
+      - "8501:8501"
+    command: ["streamlit", "run", "lunar_core/ui/app.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
     networks:
-      - internal-net
+      - samanvaya-net
     depends_on:
-      redis:
-        condition: service_healthy
+      - api
     security_opt:
       - no-new-privileges:true
-    read_only: true
     tmpfs:
       - /tmp
-    volumes:
-      - audit_logs:/app/data/audit
-      - pipeline_data:/app/data/pipeline
     environment:
       - ENVIRONMENT=production
-      - REDIS_URL=redis://redis:6379/0
-
-  redis:
-    image: redis:7.2-alpine
-    container_name: samanvaya-redis
-    restart: always
-    command: redis-server --save 60 1 --loglevel warning
-    networks:
-      - internal-net
-    security_opt:
-      - no-new-privileges:true
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
 
 networks:
-  frontend-net:
+  samanvaya-net:
     driver: bridge
-    internal: false
-    # Network for public-facing components (gateway/load balancer)
-    
-  internal-net:
-    driver: bridge
-    internal: true
-    # Isolated zero-trust network. No internet access.
-
-volumes:
-  audit_logs:
-  pipeline_data:
-  redis_data:
