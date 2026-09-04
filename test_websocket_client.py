@@ -305,8 +305,8 @@ def main() -> None:
                 target_features=args.features,
             )
         )
-    except ConnectionRefusedError:
-        print(f"{YELLOW}Falling back to in-process Starlette WebSocket execution...{RESET}")
+    except (ConnectionRefusedError, websockets.exceptions.InvalidStatus, websockets.exceptions.WebSocketException, OSError) as exc:
+        print(f"{YELLOW}External WebSocket connection failed ({exc}). Falling back to in-process Starlette execution...{RESET}")
         run_in_process_test()
 
 

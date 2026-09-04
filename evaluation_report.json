@@ -3,7 +3,7 @@
     "framework": "Samanvaya (\u0938\u092e\u093e\u0928\u094d\u0935\u092f)",
     "mission": "ISRO Chandrayaan-2 Planetary Remote Sensing",
     "problem_statement": "SIH PS 26166",
-    "timestamp_utc": "2026-09-04T03:15:59.099997+00:00",
+    "timestamp_utc": "2026-09-04T08:35:02.012360+00:00",
     "isro_mandate_threshold_px": 0.4
   },
   "metrics": {
@@ -19,7 +19,7 @@
     "std_residual_pixels": 0.1105,
     "ce90_pixels": 0.4714,
     "meets_isro_mandate": true,
-    "processing_time_ms": 2771.86,
+    "processing_time_ms": 3369.68,
     "image_shape_hw": [
       256,
       256
