@@ -22,14 +22,14 @@ $root = $PSScriptRoot
 # 1. Python ML Service
 Write-Host "[1/4] Launching ML Microservice (FastAPI)..." -ForegroundColor Yellow
 Start-Process powershell -ArgumentList "-NoExit", "-Command",
-  "Set-Location '$root\ml_service'; if (Test-Path .venv\Scripts\Activate.ps1) { .\.venv\Scripts\Activate.ps1 } elseif (Test-Path venv\Scripts\Activate.ps1) { .\venv\Scripts\Activate.ps1 }; python -m uvicorn main:app --host 0.0.0.0 --port 8001 --reload"
+  "Set-Location '$root\ml_service'; if (Test-Path '$root\.venv\Scripts\Activate.ps1') { . '$root\.venv\Scripts\Activate.ps1' } elseif (Test-Path '$root\venv\Scripts\Activate.ps1') { . '$root\venv\Scripts\Activate.ps1' }; python -m uvicorn main:app --host 0.0.0.0 --port 8001 --reload"
 
 Start-Sleep -Seconds 1
 
 # 2. Samanvaya Core Registration API
 Write-Host "[2/4] Launching Samanvaya Core Registration API..." -ForegroundColor Cyan
 Start-Process powershell -ArgumentList "-NoExit", "-Command",
-  "Set-Location '$root'; if (Test-Path .venv\Scripts\Activate.ps1) { .\.venv\Scripts\Activate.ps1 } elseif (Test-Path venv\Scripts\Activate.ps1) { .\venv\Scripts\Activate.ps1 }; python -m uvicorn ch2_lunar_reg.interfaces.api:app --host 0.0.0.0 --port 8000 --reload"
+  "Set-Location '$root'; if (Test-Path '$root\.venv\Scripts\Activate.ps1') { . '$root\.venv\Scripts\Activate.ps1' } elseif (Test-Path '$root\venv\Scripts\Activate.ps1') { . '$root\venv\Scripts\Activate.ps1' }; python -m uvicorn ch2_lunar_reg.interfaces.api:app --host 0.0.0.0 --port 8000 --reload"
 
 Start-Sleep -Seconds 1
 
