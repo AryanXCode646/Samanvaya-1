@@ -155,3 +155,30 @@ class SpatialUniformDistributor:
         shannon = -float(np.sum(p * np.log2(p)))
         max_shannon = float(np.log2(total_cells))
         return float(np.clip(shannon / max_shannon, 0.0, 1.0))
+
+
+def uniform_distribute(
+    matches: List[KeypointMatch],
+    image_shape: Tuple[int, int],
+    grid_rows: int = 8,
+    grid_cols: int = 8,
+    cap_per_cell: int = 4,
+) -> Tuple[List[KeypointMatch], float]:
+    """Convenience wrapper that caps matches per grid cell and returns spatial entropy.
+
+    Args:
+        matches: List of KeypointMatch objects.
+        image_shape: (height, width) of the reference image.
+        grid_rows: Number of rows in the uniform grid (default 8).
+        grid_cols: Number of columns in the uniform grid (default 8).
+        cap_per_cell: Maximum matches to keep per grid cell (default 4).
+
+    Returns:
+        A tuple ``(capped_matches, entropy_score)`` where ``capped_matches`` is the
+        list after grid-cell capping and ``entropy_score`` is the normalized Shannon
+        spatial entropy in ``[0.0, 1.0]``.
+    """
+    distributor = SpatialUniformDistributor(grid_rows=grid_rows, grid_cols=grid_cols)
+    capped = distributor.cap_grid_cells(matches, image_shape, cap_per_cell=cap_per_cell)
+    entropy = distributor.compute_shannon_spatial_entropy(capped, image_shape)
+    return capped, entropy
