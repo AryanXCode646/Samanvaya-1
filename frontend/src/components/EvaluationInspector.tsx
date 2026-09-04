@@ -121,6 +121,32 @@ const PRESET_SCENARIOS: PresetScenario[] = [
       [0.0, 0.0, 1.0],
     ],
   },
+  {
+    id: 'scenario_d',
+    title: 'Scenario D: Deep Outer Space Polar Orbit (100 km Circular)',
+    target: 'Mare Imbrium & Sinus Iridum Rim from Polar Orbital Altitude (70.9°S)',
+    sourceLabel: 'Chandrayaan-2 High-Resolution Orbiter (OHRC)',
+    refLabel: 'Wide Angle Lunar Limb Radiance (TMC-2 Deep Space)',
+    sourceImg: `${import.meta.env.BASE_URL}assets/lunar_outer_space_hero.jpg`,
+    refImg: `${import.meta.env.BASE_URL}assets/hero_banner.png`,
+    metrics: {
+      rmse: 0.2418,
+      inliers: 214,
+      total: 250,
+      ratio: 85.6,
+      entropy: 0.9412,
+      ce90: 0.3120,
+      meanRes: 0.2180,
+      maxRes: 0.3890,
+      latencyMs: 142.6,
+      meetsMandate: true,
+    },
+    matrix: [
+      [1.0012, -0.0120, 2.14],
+      [0.0120, 1.0012, -1.82],
+      [0.000008, -0.000002, 1.0],
+    ],
+  },
 ];
 
 // Representative Inlier Tie-Points for interactive vector field
