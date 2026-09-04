@@ -1,0 +1,60 @@
+# docker/Dockerfile.backend
+# Defense-grade, rootless Python container for the API backend.
+# Uses a multi-stage build, minimal attack surface, and no root privileges.
+
+# Build Stage
+FROM python:3.11-slim-bookworm AS builder
+
+# Set env variables to prevent pyc files and buffer stdout
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /build
+
+# Install build dependencies (compilers for C++ bindings/crypto)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    cmake \
+    libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and install to a local virtualenv
+COPY requirements.txt .
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+RUN pip install --no-cache-dir --require-hashes -r requirements.txt
+
+# Final Stage (Distroless or highly stripped slim image)
+FROM python:3.11-slim-bookworm AS final
+
+# Create a non-root user and group
+RUN groupadd -r samanvaya && useradd -r -g samanvaya -m -s /sbin/nologin samanvaya
+
+WORKDIR /app
+
+# Copy the virtual environment from the builder
+COPY --from=builder /opt/venv /opt/venv
+
+# Ensure the PATH is set correctly
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy application source code
+COPY --chown=samanvaya:samanvaya ./src /app/src
+COPY --chown=samanvaya:samanvaya ./data /app/data
+
+# Ensure audit log directory exists and is writable by non-root user
+RUN mkdir -p /app/data/audit && chown -R samanvaya:samanvaya /app/data
+
+# Drop root privileges
+USER samanvaya
+
+# Healthcheck to verify the server is running and audit chain is intact
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Expose port
+EXPOSE 8000
+
+# Strict security context: Read-only root filesystem via Docker run flags
+# Fast API server launch
+CMD ["uvicorn", "src.api.server:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4", "--limit-max-requests", "10000"]

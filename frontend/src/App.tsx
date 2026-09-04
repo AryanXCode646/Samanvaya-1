@@ -51,15 +51,46 @@ function App() {
       <motion.header 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center gap-4 mb-8 border-b border-slate-700/50 pb-6"
+        className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 border-b border-slate-700/50 pb-6"
       >
-        <div className="bg-lunar-accent/20 p-3 rounded-xl border border-lunar-accent/30 shadow-[0_0_15px_rgba(56,189,248,0.2)]">
-          <Moon className="text-lunar-accent" size={32} />
+        <div className="flex items-center gap-4">
+          <div className="bg-lunar-accent/20 p-3 rounded-xl border border-lunar-accent/30 shadow-[0_0_15px_rgba(56,189,248,0.2)]">
+            <Moon className="text-lunar-accent" size={32} />
+          </div>
+          <div>
+            <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Samanvaya V2</h1>
+            <p className="text-slate-400 text-sm md:text-base">Hyperscale Lunar Image Correspondence Framework</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Samanvaya V2</h1>
-          <p className="text-slate-400 text-sm md:text-base">Hyperscale Lunar Image Correspondence Framework</p>
-        </div>
+
+        <nav className="flex items-center flex-wrap gap-2 text-xs font-mono">
+          <a
+            href="./overview.html"
+            className="px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-cyan-400 border border-cyan-500/30 transition-colors flex items-center gap-1.5"
+          >
+            <span>🔬 4-Mode Inspector</span>
+          </a>
+          <a
+            href="./wiki.html"
+            className="px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors"
+          >
+            📖 Wikipedia
+          </a>
+          <a
+            href="./benchmarks.html"
+            className="px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors"
+          >
+            📊 Benchmarks
+          </a>
+          <a
+            href="https://github.com/ashishsinghbora/Samanvaya"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3 py-1.5 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/30 transition-colors"
+          >
+            GitHub ↗
+          </a>
+        </nav>
       </motion.header>
 
       <main className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">

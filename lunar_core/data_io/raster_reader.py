@@ -4,7 +4,6 @@ Planetary Data Ingestion Driver (GDAL/Rasterio GeoTIFF and PDS4 Reader).
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from typing import Optional, Tuple, Union
 import urllib.parse
@@ -20,9 +19,12 @@ except ImportError:
 
 try:
     import defusedxml.ElementTree as defused_ET
+    from defusedxml.common import DefusedXmlException
     DEFUSED_AVAILABLE = True
 except ImportError:
     import xml.etree.ElementTree as defused_ET
+    class DefusedXmlException(Exception):
+        pass
     DEFUSED_AVAILABLE = False
 
 from lunar_core.models import GeoRaster, SensorModality, SunAngles
@@ -140,20 +142,22 @@ class PlanetaryRasterReader:
         Extracts solar illumination angles, pixel resolution (GSD), and sensor modality.
         """
         safe_path = sanitize_path(label_xml_path, allowed_dir=allowed_dir)
-
         # Parse with strict XXE protection: entity expansion strictly disabled
-        if LXML_AVAILABLE and lxml_ET is not None:
-            parser = lxml_ET.XMLParser(
-                resolve_entities=False,
-                no_network=True,
-                dtd_validation=False,
-                load_dtd=False,
-            )
-            tree = lxml_ET.parse(str(safe_path), parser=parser)
-            root = tree.getroot()
-        else:
-            tree = defused_ET.parse(str(safe_path), forbid_dtd=True, forbid_entities=True)
-            root = tree.getroot()
+        try:
+            if LXML_AVAILABLE and lxml_ET is not None:
+                parser = lxml_ET.XMLParser(
+                    resolve_entities=False,
+                    no_network=True,
+                    dtd_validation=False,
+                    load_dtd=False,
+                )
+                tree = lxml_ET.parse(str(safe_path), parser=parser)
+                root = tree.getroot()
+            else:
+                tree = defused_ET.parse(str(safe_path), forbid_dtd=True, forbid_entities=True)
+                root = tree.getroot()
+        except (DefusedXmlException, Exception) as exc:
+            raise ValueError(f"Invalid or unsafe PDS4 XML label: {safe_path}") from exc
 
         # Extract namespace if present
         ns = {"pds": root.tag.split("}")[0].strip("{")} if "}" in root.tag else {}

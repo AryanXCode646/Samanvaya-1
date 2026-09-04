@@ -1,7 +1,3 @@
-<div align="center">
-
-<img src="assets/hero_banner.png" alt="SAMANVAYA: ISRO Chandrayaan-2 Planetary Image Registration Header Banner" width="100%"/>
-
 # 🌙 SAMANVAYA (समान्वय)
 ### Autonomous Multi-Modal, Sun-Angle, and Scale-Invariant Lunar Image Correspondence Framework
 
@@ -19,36 +15,33 @@
   <i>"Multi-modal, Sun angle and scale invariant image correspondence using Chandrayaan-2 optical images (OHRC, TMC and IIRS)"</i>
 </p>
 
-[**Interactive Portal (Streamlit)**](http://localhost:8501) • [**Showcase Documentation & Wiki**](https://ashishsinghbora.github.io/Samanvaya/) • [**Architecture**](#-architecture--clean-architecture-data-flow) • [**Quickstart**](#-quickstart--installation) • [**USGS ISIS3 Integration**](#-usgs-isis3--bundle-adjustment)
+**Samanvaya** is an enterprise-grade lunar optical image registration and tie-point correspondence engine engineered specifically for ISRO Chandrayaan-2 payloads (**OHRC, TMC-2, IIRS**) and NASA LRO NAC data. It solves extreme remote sensing challenges including $180^\circ$ solar shadow inversion, massive scale gaps ($320\times$), and sub-pixel precision requirements under rugged topography.
 
-</div>
-
----
-
-## 📖 Executive Summary & Mission Context
-
-Spaceborne optical imaging of the lunar surface presents severe photogrammetric challenges:
-1. **Atmosphereless 180° Solar Shadow Reversal**: Because the Moon has no atmosphere, solar shadows cast by crater rims and ridges are pitch-black voids with zero diffuse Rayleigh or Mie scattering. When registering orbital passes acquired at opposing sun angles (e.g., morning sun at Azimuth $60^\circ$ vs. afternoon sun at Azimuth $240^\circ$), illumination completely inverts. Standard intensity and gradient-based descriptors (SIFT, ORB, SURF, NCC) fail catastrophically because pixel intensities strongly anti-correlate ($\rho_{\text{raw}} = -0.9627$).
-2. **Extreme Multi-Modal Scale Disparities**: Chandrayaan-2 payloads possess wildly disparate Ground Sampling Distances (GSD):
-   - **OHRC (Orbiter High Resolution Camera)**: $\sim 0.25\text{ m/pixel}$ (Sub-meter ultra-high resolution)
-   - **TMC-2 (Terrain Mapping Camera-2)**: $\sim 5.0\text{ m/pixel}$ ($20\times$ scale ratio against OHRC)
-   - **IIRS (Imaging Infrared Spectrometer)**: $\sim 80.0\text{ m/pixel}$ across 256 hyperspectral bands ($320\times$ scale ratio against OHRC)
-   - **NASA LRO NAC (Lunar Reconnaissance Orbiter)**: $\sim 0.50\text{ m/pixel}$
-3. **Severe Topographic Crater Slopes ($20^\circ - 45^\circ$)**: Steep crater walls create non-Lambertian reflectance spikes and illumination burnout along sunward rims when assumed planar.
-4. **Out-of-Core Gigapixel Rasters**: Full-swath planetary rasters frequently exceed $12{,}000 \times 40{,}000$ pixels, causing Out-Of-Memory (OOM) crashes on standard computer vision pipelines.
+[**Interactive Portal (Web & Streamlit)**](https://ashishsinghbora.github.io/Samanvaya/) • [**Showcase Documentation & Wiki**](https://ashishsinghbora.github.io/Samanvaya/wiki.html) • [**Benchmark Scorecard**](https://ashishsinghbora.github.io/Samanvaya/benchmarks.html) • [**Architecture**](#-architecture--clean-architecture-data-flow) • [**Quickstart**](#-quickstart--installation) • [**USGS ISIS3 Integration**](#-usgs-isis3--bundle-adjustment)
 
 ---
 
-## ⚡ The "Proof-in-3-Seconds" Visual
+## 🏛️ System Architecture
 
-<div align="center">
-  <img src="assets/proof_in_3_seconds.png" alt="Proof-in-3-Seconds Empirical Composite Graphic" width="100%"/>
-  <p><i>Figure 1: Empirical verification demonstrating: (1) 180° shadow reversal raw failure (ρ = -0.9627); (2) Log-Gabor Phase Congruency step-edge structural invariance (ρ = +0.9295); (3) Registered 50/50 checkerboard overlay with sub-pixel tie-point quivers (RMSE = 0.283 px &lt; 0.40 px mandate).</i></p>
-</div>
+Samanvaya adheres strictly to **Clean Architecture** boundaries, separating pure photogrammetric mathematics from infrastructure adapters and presentation interfaces:
+ch2_lunar_reg/
+├── domain/          # Pure math, photogrammetric physics, and transformation models
+├── application/     # Orchestration use-cases, pipelines, and batch handlers
+├── infrastructure/  # External SDK wrappers: Rasterio, PyTorch, Kornia, GDAL, USGS ISIS3
+└── interfaces/      # Endpoints and entry points: FastAPI routers, WebSockets, CLI, Streamlit
 
 ---
 
-## 🎯 Quantitative Benchmark Scorecard (ISRO Mandate Verification)
+## 🚀 Key Technical Features
+
+1. **Robust Phase Congruency & LoFTR Matching:** Handles extreme illumination inversion where traditional feature descriptors (SIFT/ORB) fail entirely.
+2. **O(1) Parabolic Taylor Sub-Pixel Refinement:** Enforces strict negative-definite Hessian validation ($\det(\mathbf{H}) = 4ab - c^2 > 0$, $a < 0$, $b < 0$) to guarantee sub-pixel RMSE $< 0.40\text{ px}$.
+3. **Out-of-Core Tile Processing:** Utilizes `rasterio.windows.Window` for memory-bounded processing of massive multi-gigabyte GeoTIFFs without out-of-memory (OOM) crashes.
+4. **Hyperspectral IIRS Bridge:** Automatically bridges high-resolution optical OHRC ($0.25\text{ m/px}$) down to hyperspectral IIRS continuum bands ($80\text{ m/px}$) via TMC-2 intermediate scaling.
+
+---
+
+## 📊 Benchmark Scorecard
 
 | Evaluation Metric | Classical Baseline (SIFT / ORB) | LoFTR Baseline | **Samanvaya (This Framework)** | ISRO SIH Mandate | Verification Status |
 |---|---|---|---|---|---|
@@ -167,36 +160,25 @@ $$H_{\text{OHRC}\to\text{IIRS}} = H_{\text{TMC2}\to\text{IIRS}} \cdot H_{\text{O
 
 ## ⚡ Quickstart & Installation
 
-### Option 1: Using `make` (Recommended)
+### 1. Clone & Setup Environment
+
 ```bash
-# 1. Clone repository
 git clone https://github.com/ashishsinghbora/Samanvaya.git
 cd Samanvaya
 
-# 2. Automated setup (creates venv, installs dependencies & registers CLI)
-make install
+# Option A: One-click launcher (Linux / macOS)
+./start.sh
 
-# 3. Launch Interactive Streamlit Portal
-make run
+# Option B: One-click launcher (Windows PowerShell)
+.\start.ps1
+
+# Option C: Using make
+make setup
 ```
-Open [http://localhost:8501](http://localhost:8501) in your browser.
 
-### Option 2: Using Docker Compose
+### 2. Execute Workflows via Unified CLI
+
 ```bash
-docker compose up --build
-```
-- **Streamlit Web Portal**: [http://localhost:8501](http://localhost:8501)
-- **FastAPI REST API**: [http://localhost:8000/docs](http://localhost:8000/docs)
-
----
-
-## 💻 CLI & Python SDK Usage
-
-### Global Command-Line Interface (`samanvaya`)
-```bash
-# Display system capabilities, GPU acceleration, and mission presets
-samanvaya info
-
 # Launch interactive Streamlit portal with 4-mode inspector and benchmark presets
 samanvaya ui --port 8501
 
@@ -208,6 +190,7 @@ samanvaya align -s data/source_ohrc.tif -r data/ref_lro_nac.tif -o output/
 
 # Execute full automated test suite (79 tests)
 samanvaya test
+# Or: make test
 ```
 
 ### Python SDK Example
@@ -445,6 +428,14 @@ ch2_lunar_reg/tests/test_transformation.py::test_affine_solver_accuracy PASSED [
 
 ======================= 79 passed, 4 warnings in 58.02s ========================
 ```
+
+---
+
+## 🛡️ Security & Compliance
+- **XXE Defense**: All PDS4 XML and label parsers explicitly disable external entity expansion (`resolve_entities=False`).
+- **Path Traversal Protection**: Canonical path validation (`sanitize_path`) rejects directory escapes and traversal attempts.
+- **Decompression Bomb Shield**: Enforces image dimensions $\le 30,000 \times 30,000$ and memory budget $\le 4\text{ GiB}$ before rasterio array decoding.
+- **ISRO SIH Compliance**: Built to meet strict automated telemetry, sub-pixel RMSE $< 0.40\text{ px}$, and USGS ISIS3 GCP export requirements for planetary data processing.
 
 ---
 
