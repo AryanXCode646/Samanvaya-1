@@ -1,6 +1,6 @@
 # Samanvaya Makefile: Single-Command Automation
 
-.PHONY: install run dev api test docker clean info help pipeline metrics evaluate
+.PHONY: install run dev api test docker clean info help pipeline metrics evaluate verify-raster report-pdf test-ws
 
 PYTHON := python3
 PIP := pip
@@ -12,6 +12,9 @@ help:
 	@echo "  make install      - Install dependencies and register 'samanvaya' CLI"
 	@echo "  make pipeline     - Run end-to-end lunar registration pipeline with Minnaert correction"
 	@echo "  make metrics      - Generate Phase 1 evaluation metrics report (JSON & CSV)"
+	@echo "  make verify-raster- Real raster out-of-core windowed tile verification"
+	@echo "  make report-pdf   - Generate executive ReportLab PDF mission report"
+	@echo "  make test-ws      - Stream live asynchronous WebSocket telemetry"
 	@echo "  make run          - Launch interactive Streamlit portal (port 8501)"
 	@echo "  make api          - Launch FastAPI REST backend (port 8000)"
 	@echo "  make test         - Run full automated verification suite"
@@ -59,6 +62,18 @@ metrics:
 	$(PYTHON) metrics.py
 
 evaluate: metrics
+
+verify-raster:
+	@echo "🛰️ Running real raster out-of-core verification harness..."
+	$(PYTHON) verify_raster_run.py --scenario scenario_a
+
+report-pdf:
+	@echo "📄 Generating executive ReportLab PDF mission report..."
+	$(PYTHON) pdf_reporter.py --json evaluation_report.json --output samanvaya_mission_report.pdf
+
+test-ws:
+	@echo "🌊 Streaming live asynchronous WebSocket telemetry..."
+	$(PYTHON) test_websocket_client.py --in-process
 
 docker:
 	@echo "🐳 Building and starting Docker container stack..."

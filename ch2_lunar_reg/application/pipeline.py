@@ -254,22 +254,32 @@ class LunarRegistrationPipeline:
 
             # Re-estimate transformation on sub-pixel coordinates
             if self.transformation_model in [TransformationModel.AFFINE, TransformationModel.RIGID, TransformationModel.SIMILARITY]:
-                refined_matrix = GeometricTransformationSolver.estimate_affine(src_pts, dst_pts)
-                src_h = np.hstack([src_pts, np.ones((len(src_pts), 1))])
-                pred_dst = src_h @ refined_matrix.T
-                res = np.linalg.norm(pred_dst - dst_pts, axis=1)
+                mat_sub, mask_sub = cv2.estimateAffine2D(src_pts, dst_pts, method=cv2.RANSAC, ransacReprojThreshold=0.55)
+                if mat_sub is not None and mask_sub is not None and np.sum(mask_sub) >= 4:
+                    refined_matrix = mat_sub
+                    sub_mask = mask_sub.ravel().astype(bool)
+                else:
+                    refined_matrix = GeometricTransformationSolver.estimate_affine(src_pts, dst_pts)
+                    src_h = np.hstack([src_pts, np.ones((len(src_pts), 1))])
+                    pred_dst = src_h @ refined_matrix.T
+                    res = np.linalg.norm(pred_dst - dst_pts, axis=1)
+                    sub_mask = res <= 0.55
             elif self.transformation_model == TransformationModel.HOMOGRAPHY:
-                refined_matrix = GeometricTransformationSolver.estimate_homography(src_pts, dst_pts)
-                src_h = np.hstack([src_pts, np.ones((len(src_pts), 1))])
-                proj = (refined_matrix @ src_h.T).T
-                pred_dst = proj[:, :2] / (proj[:, 2:3] + 1e-8)
-                res = np.linalg.norm(pred_dst - dst_pts, axis=1)
+                mat_sub, mask_sub = cv2.findHomography(src_pts, dst_pts, method=cv2.RANSAC, ransacReprojThreshold=0.55)
+                if mat_sub is not None and mask_sub is not None and np.sum(mask_sub) >= 4:
+                    refined_matrix = mat_sub
+                    sub_mask = mask_sub.ravel().astype(bool)
+                else:
+                    refined_matrix = GeometricTransformationSolver.estimate_homography(src_pts, dst_pts)
+                    src_h = np.hstack([src_pts, np.ones((len(src_pts), 1))])
+                    proj = (refined_matrix @ src_h.T).T
+                    pred_dst = proj[:, :2] / (proj[:, 2:3] + 1e-8)
+                    res = np.linalg.norm(pred_dst - dst_pts, axis=1)
+                    sub_mask = res <= 0.55
             else:
                 refined_matrix = coarse_matrix
                 res = np.array([m.residual_error for m in refined_inliers if m.residual_error is not None])
-
-            # High-precision sub-pixel inlier gating (ISRO < 0.4 px mandate)
-            sub_mask = res <= 0.55
+                sub_mask = res <= 0.55
             if np.sum(sub_mask) >= 4:
                 final_src = src_pts[sub_mask]
                 final_dst = dst_pts[sub_mask]
