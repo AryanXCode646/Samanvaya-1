@@ -8,7 +8,7 @@ import base64
 import io
 import logging
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple, Union
 import uuid
 import cv2
 import numpy as np

@@ -6,7 +6,9 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Optional, Tuple, Union
+import os
 import urllib.parse
+import urllib.request
 import numpy as np
 import rasterio
 
@@ -47,9 +49,14 @@ def sanitize_path(input_path: Union[str, Path], allowed_dir: Optional[Path] = No
     # Parse and unwrap file:// URI schemes
     if path_str.startswith("file:"):
         parsed = urllib.parse.urlparse(path_str)
-        path_str = urllib.parse.unquote(parsed.path)
-        if parsed.netloc and parsed.netloc != "localhost":
-            path_str = f"/{parsed.netloc}{path_str}"
+        if os.name == "nt":
+            combined = f"{parsed.netloc}{parsed.path}"
+            path_str = urllib.request.url2pathname(combined).lstrip("\\/")
+            path_str = os.path.normpath(path_str)
+        else:
+            path_str = urllib.parse.unquote(parsed.path)
+            if parsed.netloc and parsed.netloc != "localhost":
+                path_str = f"/{parsed.netloc}{path_str}"
 
     # Handle percent-encoded characters e.g. %2e%2e%2f -> ../
     unquoted = urllib.parse.unquote(path_str)
