@@ -1,0 +1,127 @@
+{
+  "metadata": {
+    "framework": "Samanvaya (\u0938\u092e\u093e\u0928\u094d\u0935\u092f)",
+    "mission": "ISRO Chandrayaan-2 Planetary Remote Sensing",
+    "problem_statement": "SIH PS 26166",
+    "timestamp_utc": "2026-09-04T02:02:53.859235+00:00",
+    "isro_mandate_threshold_px": 0.4
+  },
+  "metrics": {
+    "total_matches": 120,
+    "inlier_count": 7,
+    "inlier_ratio_percent": 5.83,
+    "rmse_pixels": 0.1903,
+    "control_point_rmse_pixels": 0.4855,
+    "spatial_uniformity_score": 0.4679,
+    "mean_residual_pixels": 0.1718,
+    "median_residual_pixels": 0.1775,
+    "max_residual_pixels": 0.2765,
+    "std_residual_pixels": 0.0819,
+    "ce90_pixels": 0.2704,
+    "meets_isro_mandate": true,
+    "processing_time_ms": 718.71,
+    "image_shape_hw": [
+      256,
+      256
+    ]
+  },
+  "transformation_matrix": [
+    [
+      1.0009817399558607,
+      0.04275683052194611,
+      0.6708519056850057
+    ],
+    [
+      -0.03967603406172992,
+      1.0021806609036605,
+      0.7370289412403688
+    ]
+  ],
+  "tie_points_count": 7,
+  "tie_points": [
+    {
+      "id": 0,
+      "ref_x": 185.0,
+      "ref_y": 93.0,
+      "src_x": 180.0,
+      "src_y": 99.0,
+      "reprojected_ref_x": 185.0804913194126,
+      "reprojected_ref_y": 92.81122823959137,
+      "residual_pixels": 0.20521605694621892,
+      "confidence": 0.37007900867148213,
+      "subpixel_refined": true
+    },
+    {
+      "id": 1,
+      "ref_x": 205.1059331832095,
+      "ref_y": 119.01779180273626,
+      "src_x": 199.0,
+      "src_y": 126.0,
+      "reprojected_ref_x": 205.25357880266648,
+      "reprojected_ref_y": 119.11626143681734,
+      "residual_pixels": 0.1774697094743279,
+      "confidence": 0.3833365940844006,
+      "subpixel_refined": true
+    },
+    {
+      "id": 2,
+      "ref_x": 32.0,
+      "ref_y": 171.0,
+      "src_x": 24.0,
+      "src_y": 171.0,
+      "reprojected_ref_x": 32.00583168387845,
+      "reprojected_ref_y": 171.1576971382848,
+      "residual_pixels": 0.1578049300879726,
+      "confidence": 0.45697543112161754,
+      "subpixel_refined": true
+    },
+    {
+      "id": 3,
+      "ref_x": 107.00342820998549,
+      "ref_y": 71.84889618041433,
+      "src_x": 103.0,
+      "src_y": 75.0,
+      "reprojected_ref_x": 106.97873341028462,
+      "reprojected_ref_y": 71.81394700065673,
+      "residual_pixels": 0.04279343755758884,
+      "confidence": 0.44477942579190266,
+      "subpixel_refined": true
+    },
+    {
+      "id": 4,
+      "ref_x": 149.06709507578762,
+      "ref_y": 22.912514247248126,
+      "src_x": 147.0,
+      "src_y": 28.0,
+      "reprojected_ref_x": 149.01235893381102,
+      "reprojected_ref_y": 22.965710439468566,
+      "residual_pixels": 0.07632745315570975,
+      "confidence": 0.23761858373552902,
+      "subpixel_refined": true
+    },
+    {
+      "id": 5,
+      "ref_x": 205.9368291957165,
+      "ref_y": 154.04336922718844,
+      "src_x": 198.0,
+      "src_y": 161.0,
+      "reprojected_ref_x": 205.74908613097872,
+      "reprojected_ref_y": 154.23226060250718,
+      "residual_pixels": 0.2663220043987068,
+      "confidence": 0.29854689847389837,
+      "subpixel_refined": true
+    },
+    {
+      "id": 6,
+      "ref_x": 121.53033847395857,
+      "ref_y": 178.92505524942052,
+      "src_x": 113.0,
+      "src_y": 182.0,
+      "reprojected_ref_x": 121.56353167569146,
+      "reprojected_ref_y": 178.6505173767311,
+      "residual_pixels": 0.2765372166311689,
+      "confidence": 0.29908242532602625,
+      "subpixel_refined": true
+    }
+  ]
+}

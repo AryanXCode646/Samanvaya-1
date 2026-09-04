@@ -1,6 +1,6 @@
 # Samanvaya Makefile: Single-Command Automation
 
-.PHONY: install run dev api test docker clean info help
+.PHONY: install run dev api test docker clean info help pipeline metrics evaluate
 
 PYTHON := python3
 PIP := pip
@@ -8,14 +8,16 @@ PIP := pip
 help:
 	@echo "Samanvaya: Lunar Optical Image Registration Framework"
 	@echo "Usage:"
-	@echo "  make dev      - ONE COMMAND: Start all 3 services (ML + Node.js + React)"
-	@echo "  make install  - Install dependencies and register 'samanvaya' CLI"
-	@echo "  make run      - Launch interactive Streamlit portal (port 8501)"
-	@echo "  make api      - Launch FastAPI REST backend (port 8000)"
-	@echo "  make test     - Run full 84-test automated verification suite"
-	@echo "  make docker   - Build and start Docker container stack"
-	@echo "  make clean    - Remove build artifacts and caches"
-	@echo "  make info     - Display system environment and mission telemetry"
+	@echo "  make dev          - ONE COMMAND: Start all 3 services (ML + Node.js + React)"
+	@echo "  make install      - Install dependencies and register 'samanvaya' CLI"
+	@echo "  make pipeline     - Run end-to-end lunar registration pipeline with Minnaert correction"
+	@echo "  make metrics      - Generate Phase 1 evaluation metrics report (JSON & CSV)"
+	@echo "  make run          - Launch interactive Streamlit portal (port 8501)"
+	@echo "  make api          - Launch FastAPI REST backend (port 8000)"
+	@echo "  make test         - Run full automated verification suite"
+	@echo "  make docker       - Build and start Docker container stack"
+	@echo "  make clean        - Remove build artifacts and caches"
+	@echo "  make info         - Display system environment and mission telemetry"
 
 install:
 	$(PIP) install --upgrade pip
@@ -47,6 +49,16 @@ api:
 test:
 	@echo "🧪 Running full automated verification test suite..."
 	pytest tests/ ch2_lunar_reg/tests/ -v
+
+pipeline:
+	@echo "🛰️ Running end-to-end registration pipeline (Minnaert + Sub-pixel)..."
+	$(PYTHON) run_pipeline.py --scenario scenario_a
+
+metrics:
+	@echo "📊 Computing evaluation metrics (RMSE, Inlier Ratio, Uniformity)..."
+	$(PYTHON) metrics.py
+
+evaluate: metrics
 
 docker:
 	@echo "🐳 Building and starting Docker container stack..."

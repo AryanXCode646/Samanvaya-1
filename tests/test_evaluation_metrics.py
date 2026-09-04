@@ -144,3 +144,67 @@ def test_export_structured_json_and_scatter_plot(tmp_path: Path):
 
     assert saved_path.exists()
     assert saved_path.stat().st_size > 1000  # Non-trivial image file
+
+    # 3. Test CSV Export
+    csv_path = tmp_path / "evaluation_report.csv"
+    csv_str = report.export_csv(csv_path)
+    assert csv_path.exists()
+    assert "SAMANVAYA PLANETARY REGISTRATION EVALUATION REPORT" in csv_str
+    assert "rmse_pixels," in csv_str
+    assert "inlier_ratio_percent,50.00,%" in csv_str
+    assert "TIE POINT RESIDUAL ERROR TABLE" in csv_str
+
+
+def test_standalone_metrics_module(tmp_path: Path):
+    """Verifies standalone root metrics.py evaluation functions and reports."""
+    from metrics import (
+        compute_control_points_rmse,
+        compute_inlier_stats,
+        compute_spatial_uniformity_score,
+        evaluate_registration,
+    )
+
+    # 1. Inlier stats
+    inliers, ratio = compute_inlier_stats(total_matches=50, inlier_count=40)
+    assert inliers == 40
+    assert ratio == 80.0
+
+    # 2. Control points RMSE
+    gt_src = np.array([[10.0, 10.0], [50.0, 50.0], [10.0, 50.0], [50.0, 10.0]])
+    gt_ref = gt_src + np.array([2.0, -1.0])
+    H = np.array([[1.0, 0.0, 2.0], [0.0, 1.0, -1.0], [0.0, 0.0, 1.0]])
+    cp_rmse = compute_control_points_rmse(gt_ref, gt_src, H)
+    assert np.isclose(cp_rmse, 0.0, atol=1e-5)
+
+    # 3. Spatial uniformity score
+    kpts = np.array([[20.0, 20.0], [80.0, 80.0], [20.0, 80.0], [80.0, 20.0]])
+    score = compute_spatial_uniformity_score(kpts, image_shape=(100, 100), grid_bins=4)
+    assert score > 0.0
+
+    # 4. End-to-end report generation and exports
+    tie_pts = [
+        {"ref_x": float(gt_ref[i, 0]), "ref_y": float(gt_ref[i, 1]), "src_x": float(gt_src[i, 0]), "src_y": float(gt_src[i, 1])}
+        for i in range(4)
+    ]
+    report = evaluate_registration(
+        tie_points=tie_pts,
+        transformation_matrix=H,
+        ground_truth_control_points=(gt_ref, gt_src),
+        total_matches=5,
+        image_shape=(100, 100),
+    )
+
+    assert report.meets_isro_mandate is True
+    assert report.rmse_pixels < 0.40
+    assert report.control_point_rmse_pixels is not None
+    assert np.isclose(report.control_point_rmse_pixels, 0.0, atol=1e-5)
+
+    json_f = tmp_path / "eval_standalone.json"
+    csv_f = tmp_path / "eval_standalone.csv"
+    report.export_json(json_f)
+    report.export_csv(csv_f)
+
+    assert json_f.exists()
+    assert csv_f.exists()
+    assert "meets_isro_mandate" in json_f.read_text()
+    assert "TIE POINT RESIDUAL TABLE" in csv_f.read_text()

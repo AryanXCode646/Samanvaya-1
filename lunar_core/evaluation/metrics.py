@@ -43,6 +43,7 @@ class RegistrationEvaluationReport:
     std_residual_pixels: float
     ce90_pixels: float                      # Circular Error at 90th percentile
     meets_isro_mandate: bool                # RMSE < 0.40 px with >= 4 inliers
+    control_point_rmse_pixels: Optional[float] = None
     processing_time_ms: float = 0.0
     homography_matrix: Optional[List[List[float]]] = None
     tie_points: List[Dict[str, Any]] = field(default_factory=list)
@@ -77,6 +78,7 @@ class RegistrationEvaluationReport:
                 "inlier_count": self.inlier_count,
                 "inlier_ratio_percent": round(self.inlier_ratio_percent, 2),
                 "rmse_pixels": round(self.rmse_pixels, 4),
+                "control_point_rmse_pixels": round(self.control_point_rmse_pixels, 4) if self.control_point_rmse_pixels is not None else None,
                 "spatial_uniformity_entropy": round(self.spatial_uniformity_entropy, 4),
                 "mean_residual_pixels": round(self.mean_residual_pixels, 4),
                 "median_residual_pixels": round(self.median_residual_pixels, 4),
@@ -103,6 +105,43 @@ class RegistrationEvaluationReport:
         json_str = json.dumps(data, indent=indent)
         out_file.write_text(json_str, encoding="utf-8")
         return json_str
+
+    def export_csv(self, output_path: Union[str, Path]) -> str:
+        """
+        Exports the evaluation summary and inlier tie point residuals to a CSV file.
+        """
+        out_file = Path(output_path)
+        out_file.parent.mkdir(parents=True, exist_ok=True)
+        lines: List[str] = [
+            "# SAMANVAYA PLANETARY REGISTRATION EVALUATION REPORT",
+            "# Metric,Value,Unit",
+            f"total_matches,{self.total_matches},count",
+            f"inlier_count,{self.inlier_count},count",
+            f"inlier_ratio_percent,{self.inlier_ratio_percent:.2f},%",
+            f"rmse_pixels,{self.rmse_pixels:.4f},pixels",
+            f"control_point_rmse_pixels,{f'{self.control_point_rmse_pixels:.4f}' if self.control_point_rmse_pixels is not None else 'N/A'},pixels",
+            f"spatial_uniformity_entropy,{self.spatial_uniformity_entropy:.4f},normalized_shannon",
+            f"mean_residual_pixels,{self.mean_residual_pixels:.4f},pixels",
+            f"median_residual_pixels,{self.median_residual_pixels:.4f},pixels",
+            f"max_residual_pixels,{self.max_residual_pixels:.4f},pixels",
+            f"std_residual_pixels,{self.std_residual_pixels:.4f},pixels",
+            f"ce90_pixels,{self.ce90_pixels:.4f},pixels",
+            f"meets_isro_mandate,{self.meets_isro_mandate},boolean",
+            f"processing_time_ms,{self.processing_time_ms:.2f},ms",
+            "#",
+            "# TIE POINT RESIDUAL ERROR TABLE",
+            "id,ref_x,ref_y,src_x,src_y,reprojected_ref_x,reprojected_ref_y,residual_pixels,confidence,subpixel_refined",
+        ]
+        for pt in self.tie_points:
+            lines.append(
+                f"{pt.get('id', 0)},{pt.get('ref_x', 0.0):.3f},{pt.get('ref_y', 0.0):.3f},"
+                f"{pt.get('src_x', 0.0):.3f},{pt.get('src_y', 0.0):.3f},"
+                f"{pt.get('reprojected_ref_x', 0.0):.3f},{pt.get('reprojected_ref_y', 0.0):.3f},"
+                f"{pt.get('residual_pixels', 0.0):.4f},{pt.get('confidence', 1.0):.4f},{pt.get('subpixel_refined', False)}"
+            )
+        csv_str = "\n".join(lines) + "\n"
+        out_file.write_text(csv_str, encoding="utf-8")
+        return csv_str
 
     def export_residual_scatter_plot(
         self,
@@ -354,12 +393,14 @@ class EvaluationEngine:
         image_shape: Tuple[int, int],
         homography: Optional[np.ndarray] = None,
         processing_time_ms: float = 0.0,
+        ground_truth_control_points: Optional[Tuple[np.ndarray, np.ndarray]] = None,
     ) -> RegistrationEvaluationReport:
         """
         Full diagnostic evaluator returning a comprehensive RegistrationEvaluationReport.
         """
         inlier_count = len(inliers)
         inlier_ratio_pct = cls.compute_inlier_ratio(inlier_count, total_matches)
+        control_point_rmse: Optional[float] = None
 
         if inlier_count >= 4:
             ref_pts = np.array([m.ref_xy for m in inliers], dtype=np.float64)
@@ -409,6 +450,13 @@ class EvaluationEngine:
 
             h_list = homography.tolist() if homography is not None else None
             meets_mandate = bool(rmse < 0.40 and inlier_count >= 4)
+
+            # Evaluate against ground-truth control points if provided
+            if ground_truth_control_points is not None and homography is not None:
+                gt_ref, gt_src = ground_truth_control_points
+                if len(gt_ref) > 0:
+                    cp_rmse, _, _ = cls.compute_projective_rmse(gt_ref, gt_src, homography)
+                    control_point_rmse = float(cp_rmse)
         else:
             rmse, mean_res, median_res, max_res, std_res, ce90, entropy = (
                 999.0, 999.0, 999.0, 999.0, 0.0, 999.0, 0.0
@@ -429,6 +477,7 @@ class EvaluationEngine:
             std_residual_pixels=std_res,
             ce90_pixels=ce90,
             meets_isro_mandate=meets_mandate,
+            control_point_rmse_pixels=control_point_rmse,
             processing_time_ms=processing_time_ms,
             homography_matrix=h_list,
             tie_points=tie_points,

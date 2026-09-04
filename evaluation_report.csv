@@ -1,0 +1,25 @@
+# SAMANVAYA ISRO SIH PS 26166 PLANETARY REGISTRATION EVALUATION REPORT
+# Metric,Value,Unit
+total_matches,120,count
+inlier_count,7,count
+inlier_ratio_percent,5.83,%
+rmse_pixels,0.1903,pixels
+control_point_rmse_pixels,0.4855,pixels
+spatial_uniformity_score,0.4679,normalized_shannon
+mean_residual_pixels,0.1718,pixels
+median_residual_pixels,0.1775,pixels
+max_residual_pixels,0.2765,pixels
+std_residual_pixels,0.0819,pixels
+ce90_pixels,0.2704,pixels
+meets_isro_mandate,True,boolean
+processing_time_ms,718.71,ms
+#
+# TIE POINT RESIDUAL TABLE
+id,ref_x,ref_y,src_x,src_y,reprojected_ref_x,reprojected_ref_y,residual_pixels,confidence,subpixel_refined
+0,185.000,93.000,180.000,99.000,185.080,92.811,0.2052,0.3701,True
+1,205.106,119.018,199.000,126.000,205.254,119.116,0.1775,0.3833,True
+2,32.000,171.000,24.000,171.000,32.006,171.158,0.1578,0.4570,True
+3,107.003,71.849,103.000,75.000,106.979,71.814,0.0428,0.4448,True
+4,149.067,22.913,147.000,28.000,149.012,22.966,0.0763,0.2376,True
+5,205.937,154.043,198.000,161.000,205.749,154.232,0.2663,0.2985,True
+6,121.530,178.925,113.000,182.000,121.564,178.651,0.2765,0.2991,True

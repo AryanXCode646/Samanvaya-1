@@ -156,3 +156,79 @@ class PhotometricNormalizer:
             corrected = np.clip(corrected, 0.0, 1.0)
 
         return corrected.astype(np.float32), valid_mask
+
+    @staticmethod
+    def minnaert(cos_i: np.ndarray, cos_e: np.ndarray, k: float = 0.8, eps: float = 1e-6) -> np.ndarray:
+        """
+        Minnaert photometric scattering model for rough planetary surfaces:
+            R_Minnaert = (cos i)^k * (cos e)^(k - 1)
+        where k in [0.5, 1.0] is the limb-darkening exponent (default k=0.8 for lunar regolith).
+        """
+        mu_0 = np.maximum(cos_i, eps)
+        mu = np.maximum(cos_e, eps)
+        return np.maximum((mu_0 ** k) * (mu ** (k - 1.0)), 0.0)
+
+    def normalize_minnaert(
+        self,
+        image: np.ndarray,
+        sun_angles: SunAngles,
+        dem_data: Optional[np.ndarray] = None,
+        slope_gradients: Optional[Tuple[np.ndarray, np.ndarray]] = None,
+        pixel_gsd: float = 1.0,
+        k: float = 0.8,
+        max_correction_factor: float = 5.0,
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Corrects image intensities via Topographic Illumination Correction & Minnaert law.
+        Suppresses shadow boundary step discontinuities across steep crater walls.
+        """
+        img_f = image.astype(np.float32)
+        h, w = img_f.shape
+        sun_vec = sun_angles.sun_vector
+
+        if dem_data is not None or slope_gradients is not None:
+            if dem_data is not None:
+                if dem_data.shape != (h, w):
+                    dem_f = cv2.resize(dem_data.astype(np.float32), (w, h), interpolation=cv2.INTER_LINEAR)
+                else:
+                    dem_f = dem_data
+                nx, ny, nz = self.compute_surface_normals_from_dem(dem_f, pixel_gsd)
+            else:
+                dz_dx, dz_dy = slope_gradients
+                norm = np.sqrt(dz_dx**2 + dz_dy**2 + 1.0)
+                nx = -dz_dx / norm
+                ny = -dz_dy / norm
+                nz = 1.0 / norm
+            cos_i = nx * sun_vec[0] + ny * sun_vec[1] + nz * sun_vec[2]
+            cos_e = nz
+        else:
+            cos_i = np.full((h, w), np.maximum(sun_vec[2], 0.01), dtype=np.float32)
+            cos_e = np.ones((h, w), dtype=np.float32)
+
+        ref_cos_i = np.cos(self.ref_i)
+        ref_cos_e = np.cos(self.ref_e)
+        ref_rm = self.minnaert(np.array(ref_cos_i, dtype=np.float32), np.array(ref_cos_e, dtype=np.float32), k=k)
+
+        safe_cos_i = np.maximum(cos_i, 0.005)
+        safe_cos_e = np.maximum(cos_e, 0.005)
+        acq_rm = self.minnaert(safe_cos_i, safe_cos_e, k=k)
+
+        corr = np.where(acq_rm > 1e-5, ref_rm / np.maximum(acq_rm, 1e-5), 1.0)
+        corr = np.clip(corr, 0.1, max_correction_factor)
+        corrected = img_f * corr
+
+        shadow_thresh = float(np.nanquantile(img_f, 0.05))
+        valid_mask = (img_f > shadow_thresh) & (cos_i > 0.04)
+
+        valid_pixels = corrected[valid_mask]
+        if len(valid_pixels) > 0:
+            p2 = float(np.nanpercentile(valid_pixels, 2.0))
+            p98 = float(np.nanpercentile(valid_pixels, 98.0))
+            if p98 > p2:
+                corrected = np.clip((corrected - p2) / (p98 - p2), 0.0, 1.0)
+            else:
+                corrected = np.clip(corrected, 0.0, 1.0)
+        else:
+            corrected = np.clip(corrected, 0.0, 1.0)
+
+        return corrected.astype(np.float32), valid_mask

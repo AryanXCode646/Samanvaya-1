@@ -171,6 +171,99 @@ class LunarPhotometricNormalizer:
             
         return corrected, valid_mask
 
+    @staticmethod
+    def minnaert(
+        cos_i: np.ndarray,
+        cos_e: np.ndarray,
+        k: float = 0.8,
+        eps: float = 1e-6,
+    ) -> np.ndarray:
+        """
+        Minnaert photometric scattering model for rough planetary surfaces:
+            R_Minnaert = (cos i)^k * (cos e)^(k - 1)
+        where k in [0.5, 1.0] is the limb-darkening exponent (default k=0.8 for lunar regolith).
+        """
+        mu_0 = np.maximum(cos_i, eps)
+        mu = np.maximum(cos_e, eps)
+        return np.maximum((mu_0 ** k) * (mu ** (k - 1.0)), 0.0)
+
+    def normalize_minnaert(
+        self,
+        image: np.ndarray,
+        sun_angles: SunAngles,
+        k: float = 0.8,
+        dem_slopes: Optional[Tuple[np.ndarray, np.ndarray]] = None,
+        dem_data: Optional[np.ndarray] = None,
+        pixel_gsd: float = 1.0,
+        max_correction_factor: float = 5.0,
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Topographic Illumination Correction via Minnaert photometric normalization.
+        Suppresses harsh shadow boundaries and crater wall burnout across extreme sun angles.
+        """
+        img_norm = image.astype(np.float32)
+        h, w = img_norm.shape
+        sun_vec = sun_angles.sun_vector
+
+        if dem_data is not None:
+            # Derive local slope gradients using Sobel operators
+            dem_f = dem_data.astype(np.float32)
+            if dem_f.shape != (h, w):
+                import cv2
+                dem_f = cv2.resize(dem_f, (w, h), interpolation=cv2.INTER_LINEAR)
+            scale = 8.0 * max(float(pixel_gsd), 1e-6)
+            import cv2
+            dz_dx = cv2.Sobel(dem_f, cv2.CV_32F, 1, 0, ksize=3) / scale
+            dz_dy = cv2.Sobel(dem_f, cv2.CV_32F, 0, 1, ksize=3) / scale
+            denom = np.sqrt(1.0 + dz_dx**2 + dz_dy**2)
+            nx = -dz_dx / denom
+            ny = -dz_dy / denom
+            nz = 1.0 / denom
+            cos_i = nx * sun_vec[0] + ny * sun_vec[1] + nz * sun_vec[2]
+            cos_e = nz
+        elif dem_slopes is not None:
+            dz_dx, dz_dy = dem_slopes
+            denom = np.sqrt(1.0 + dz_dx**2 + dz_dy**2)
+            nx = -dz_dx / denom
+            ny = -dz_dy / denom
+            nz = 1.0 / denom
+            cos_i = nx * sun_vec[0] + ny * sun_vec[1] + nz * sun_vec[2]
+            cos_e = nz
+        else:
+            cos_i = np.full((h, w), np.maximum(sun_vec[2], 0.01), dtype=np.float32)
+            cos_e = np.ones((h, w), dtype=np.float32)
+
+        # Standard reference geometry
+        ref_cos_i = np.cos(self.ref_i)
+        ref_cos_e = np.cos(self.ref_e)
+        ref_rm = self.minnaert(ref_cos_i, ref_cos_e, k=k)
+
+        # Local acquisition reflectance
+        safe_cos_i = np.maximum(cos_i, 0.005)
+        safe_cos_e = np.maximum(cos_e, 0.005)
+        acq_rm = self.minnaert(safe_cos_i, safe_cos_e, k=k)
+
+        # Bounded correction factor
+        corr = np.where(acq_rm > 1e-5, ref_rm / np.maximum(acq_rm, 1e-5), 1.0)
+        corr = np.clip(corr, 0.1, max_correction_factor)
+        corrected = img_norm * corr
+
+        # Dynamic shadow masking
+        shadow_thresh = np.quantile(img_norm, self.shadow_quantile)
+        valid_mask = (img_norm > shadow_thresh) & (cos_i > 0.04)
+
+        valid_pixels = corrected[valid_mask]
+        if len(valid_pixels) > 0:
+            p2, p98 = np.percentile(valid_pixels, (2.0, 98.0))
+            if p98 > p2:
+                corrected = np.clip((corrected - p2) / (p98 - p2), 0.0, 1.0)
+            else:
+                corrected = np.clip(corrected, 0.0, 1.0)
+        else:
+            corrected = np.clip(corrected, 0.0, 1.0)
+
+        return corrected, valid_mask
+
 
 class LunarContrastEqualizer:
     """

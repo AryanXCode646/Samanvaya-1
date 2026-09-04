@@ -74,6 +74,30 @@ class SimulateBenchmarkRequest(BaseModel):
     transformation_model: TransformationModel = TransformationModel.AFFINE
 
 
+class TiePointInput(BaseModel):
+    ref_x: float
+    ref_y: float
+    src_x: float
+    src_y: float
+    confidence: float = 1.0
+    subpixel_refined: bool = True
+
+
+class ControlPointInput(BaseModel):
+    ref_x: float
+    ref_y: float
+    src_x: float
+    src_y: float
+
+
+class EvaluationApiRequest(BaseModel):
+    tie_points: List[TiePointInput]
+    transformation_matrix: List[List[float]]
+    ground_truth_control_points: Optional[List[ControlPointInput]] = None
+    total_matches: Optional[int] = None
+    image_shape: Tuple[int, int] = (1024, 1024)
+
+
 MAX_B64_PAYLOAD_BYTES = 50 * 1024 * 1024  # 50 MiB payload limit
 
 
@@ -221,6 +245,43 @@ def register_images(req: RegistrationRequest) -> Dict[str, Any]:
             "meets_isro_subpixel_mandate": result.metrics.meets_isro_subpixel_mandate,
         },
         "warped_target_b64": cv2_to_b64(result.warped_target) if result.warped_target is not None else None,
+    }
+
+
+@app.post("/api/v1/evaluate", tags=["Evaluation"])
+def evaluate_alignment_metrics(req: EvaluationApiRequest) -> Dict[str, Any]:
+    """
+    Computes rigorous evaluation metrics (RMSE, Inlier Ratio, Spatial Uniformity)
+    from registered tie-points, transformation matrix, and optional control points.
+    Returns structured JSON and CSV reports.
+    """
+    from metrics import evaluate_registration
+
+    tie_pts_dicts = [tp.model_dump() for tp in req.tie_points]
+    H_mat = np.array(req.transformation_matrix, dtype=np.float64)
+
+    gt_pts = None
+    if req.ground_truth_control_points and len(req.ground_truth_control_points) > 0:
+        gt_ref = np.array([[cp.ref_x, cp.ref_y] for cp in req.ground_truth_control_points], dtype=np.float64)
+        gt_src = np.array([[cp.src_x, cp.src_y] for cp in req.ground_truth_control_points], dtype=np.float64)
+        gt_pts = (gt_ref, gt_src)
+
+    report = evaluate_registration(
+        tie_points=tie_pts_dicts,
+        transformation_matrix=H_mat,
+        ground_truth_control_points=gt_pts,
+        total_matches=req.total_matches,
+        image_shape=req.image_shape,
+    )
+
+    report_dict = report.to_dict()
+    # Generate CSV string
+    csv_str = report.export_csv("/tmp/eval_tmp.csv") if hasattr(report, "export_csv") else ""
+
+    return {
+        "status": "success",
+        "report": report_dict,
+        "csv_content": csv_str,
     }
 
 

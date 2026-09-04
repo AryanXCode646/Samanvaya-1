@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { TelemetryDashboard } from './components/TelemetryDashboard';
+import { EvaluationInspector } from './components/EvaluationInspector';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Moon, Send, Search, Sparkles, Map, Database } from 'lucide-react';
+import { Moon, Send, Search, Sparkles, Map, Database, Crosshair, Activity } from 'lucide-react';
 
 function App() {
+  const [activeTab, setActiveTab] = useState<'inspector' | 'telemetry' | 'copilot'>('inspector');
   const [chatInput, setChatInput] = useState('');
   const [chatHistory, setChatHistory] = useState([
     { role: 'ai', text: 'Hello! I am your Lunar AI Copilot. I can analyze crater topologies, explain telemetry anomalies, or generate photogrammetry reports. What would you like to do?' }
@@ -35,6 +37,7 @@ function App() {
     e.preventDefault();
     if (!searchInput.trim()) return;
     
+    setSearchInput('');
     setIsSearching(true);
     setTimeout(() => {
       setSearchResults([
@@ -51,7 +54,7 @@ function App() {
       <motion.header 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 border-b border-slate-700/50 pb-6"
+        className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-slate-700/50 pb-6"
       >
         <div className="flex items-center gap-4">
           <div className="bg-lunar-accent/20 p-3 rounded-xl border border-lunar-accent/30 shadow-[0_0_15px_rgba(56,189,248,0.2)]">
@@ -93,26 +96,86 @@ function App() {
         </nav>
       </motion.header>
 
-      <main className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
-        
-        {/* Top Full Width: Dashboard */}
-        <div className="col-span-1 md:col-span-2">
-          <div className="mb-2">
-            <h2 className="text-xl font-semibold flex items-center gap-2"><Database size={20} className="text-sky-400"/> System Telemetry</h2>
-            <p className="text-slate-400 text-sm">Real-time pipeline monitoring and zero-trust anomaly detection.</p>
-          </div>
-          <TelemetryDashboard />
+      {/* VIEWPORT MODE SELECTOR TABS */}
+      <div className="max-w-6xl mx-auto mb-8">
+        <div className="flex flex-wrap items-center gap-2 p-1.5 bg-slate-900/80 border border-slate-800 rounded-2xl backdrop-blur-xl">
+          <button
+            onClick={() => setActiveTab('inspector')}
+            className={`px-4 py-2.5 rounded-xl font-mono text-xs flex items-center gap-2 transition-all ${
+              activeTab === 'inspector'
+                ? 'bg-gradient-to-r from-cyan-500 to-sky-600 text-slate-950 font-bold shadow-md shadow-cyan-500/20'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+            }`}
+          >
+            <Crosshair size={15} />
+            <span>Evaluation &amp; Alignment Inspector</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('telemetry')}
+            className={`px-4 py-2.5 rounded-xl font-mono text-xs flex items-center gap-2 transition-all ${
+              activeTab === 'telemetry'
+                ? 'bg-gradient-to-r from-cyan-500 to-sky-600 text-slate-950 font-bold shadow-md shadow-cyan-500/20'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+            }`}
+          >
+            <Activity size={15} />
+            <span>Node Telemetry &amp; Anomaly Forest</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('copilot')}
+            className={`px-4 py-2.5 rounded-xl font-mono text-xs flex items-center gap-2 transition-all ${
+              activeTab === 'copilot'
+                ? 'bg-gradient-to-r from-cyan-500 to-sky-600 text-slate-950 font-bold shadow-md shadow-cyan-500/20'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+            }`}
+          >
+            <Sparkles size={15} />
+            <span>AI Copilot &amp; Vector Search</span>
+          </button>
         </div>
-        
-        {/* Left Column: AI Copilot */}
-        <motion.div 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2 }}
-          className="p-6 bg-lunar-card backdrop-blur-xl rounded-2xl border border-slate-700/50 shadow-xl flex flex-col h-[450px]"
-        >
-          <div className="mb-4 flex items-center gap-2 border-b border-slate-700/50 pb-3">
-            <Sparkles className="text-purple-400" size={24}/>
+      </div>
+
+      <main className="max-w-6xl mx-auto">
+        {activeTab === 'inspector' && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <EvaluationInspector />
+          </motion.div>
+        )}
+
+        {activeTab === 'telemetry' && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="mb-4">
+              <h2 className="text-xl font-semibold flex items-center gap-2"><Database size={20} className="text-sky-400"/> System Telemetry</h2>
+              <p className="text-slate-400 text-sm">Real-time pipeline monitoring and zero-trust anomaly detection.</p>
+            </div>
+            <TelemetryDashboard />
+          </motion.div>
+        )}
+
+        {activeTab === 'copilot' && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="grid grid-cols-1 md:grid-cols-2 gap-8"
+          >
+            {/* Left Column: AI Copilot */}
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              className="p-6 bg-lunar-card backdrop-blur-xl rounded-2xl border border-slate-700/50 shadow-xl flex flex-col h-[450px]"
+            >
+              <div className="mb-4 flex items-center gap-2 border-b border-slate-700/50 pb-3">
+                <Sparkles className="text-purple-400" size={24}/>
             <div>
               <h2 className="text-lg font-bold text-white">Lunar AI Copilot</h2>
               <p className="text-xs text-slate-400">Ask questions about your data in natural language</p>
@@ -215,6 +278,8 @@ function App() {
             )}
           </div>
         </motion.div>
+          </motion.div>
+        )}
 
       </main>
       
