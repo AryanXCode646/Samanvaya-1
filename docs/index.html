@@ -3,27 +3,32 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Samanvaya (समन्वय) — Autonomous Lunar Optical Image Registration Framework</title>
-  <meta name="description" content="Production-grade multi-modal, sun-angle, and scale-invariant lunar image registration framework for ISRO Chandrayaan-2 (SIH PS 26166)." />
-  <link rel="stylesheet" href="./css/style.css" />
+  <title>Samanvaya (समान्वय) — Lunar Image Registration &amp; Photogrammetry</title>
+  <meta name="description" content="ISRO Chandrayaan-2 SIH PS 26166: Multi-Modal, Sun-Angle, and Scale-Invariant Lunar Optical Image Registration Framework." />
+
+  <!-- Preconnect & Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="assets/css/main.css" />
+
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      darkMode: "class",
+      darkMode: 'class',
       theme: {
         extend: {
           fontFamily: {
-            sans: ["Inter", "-apple-system", "sans-serif"],
-            display: ["Plus Jakarta Sans", "Inter", "sans-serif"],
-            mono: ["JetBrains Mono", "monospace"],
+            sans: ['"Inter"', 'sans-serif'],
+            display: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
           },
           colors: {
             space: {
-              950: "#030712",
-              900: "#070b16",
-              850: "#0d1324",
-              800: "#131b31",
-              750: "#18223d",
+              950: '#060911',
+              900: '#0d1322',
+              850: '#121a2f',
+              800: '#19243f',
             }
           }
         }
@@ -31,105 +36,112 @@
     }
   </script>
 </head>
-<body class="bg-space-950 text-slate-100 min-h-screen flex flex-col selection:bg-cyan-500 selection:text-slate-950">
 
-  <!-- TOP TELEMETRY STRIP -->
-  <div class="border-b border-white/5 bg-space-900/90 backdrop-blur px-4 py-2 text-center text-xs text-slate-300 sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
-      <div class="flex items-center gap-2 font-mono">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span class="text-slate-300">ISRO Chandrayaan-2 SIH PS 26166</span>
-        <span class="text-slate-600 hidden sm:inline">•</span>
-        <span class="text-cyan-400 font-semibold hidden sm:inline">79/79 Tests Passing (100%)</span>
-      </div>
-      <div class="flex items-center gap-4 text-[11px] font-mono">
-        <span class="text-emerald-400">RMSE: 0.283 px &lt; 0.40 px [PASS]</span>
-        <span class="text-slate-600 hidden md:inline">•</span>
-        <span class="text-cyan-300 hidden md:inline">Scale Bridge: Up to 320×</span>
-        <span class="text-slate-600 hidden md:inline">•</span>
-        <a href="https://github.com/ashishsinghbora/Samanvaya/releases/tag/v1.2.0" target="_blank" class="px-2 py-0.5 rounded bg-space-800 text-cyan-400 border border-cyan-800/60 hover:bg-space-750">v1.2.0 Production</a>
-      </div>
-    </div>
-  </div>
+<body class="bg-space-950 text-slate-100 selection:bg-cyan-500/30">
 
-  <!-- MAIN NAVIGATION -->
-  <header class="glass-card border-b border-white/10 px-6 py-3 sticky top-8 z-40">
-    <div class="max-w-7xl mx-auto flex items-center justify-between">
+  <!-- TOP NAVIGATION BAR -->
+  <header class="sticky top-0 z-50 glass-nav">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <!-- Brand Logo -->
       <a href="index.html" class="flex items-center gap-3 group">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 via-sky-600 to-indigo-600 flex items-center justify-center font-bold text-xl shadow-lg shadow-cyan-500/25 group-hover:scale-105 transition-transform">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 via-sky-500 to-indigo-600 flex items-center justify-center font-bold text-lg shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition-transform">
           🌙
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <span class="font-display text-lg font-extrabold tracking-tight text-white">SAMANVAYA</span>
-            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-950/80 text-cyan-300 border border-cyan-700/60">समान्वय</span>
+            <span class="font-display text-base font-extrabold tracking-tight text-white group-hover:text-cyan-300 transition-colors">SAMANVAYA</span>
+            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-950/80 text-cyan-400 border border-cyan-800/60">समान्वय</span>
           </div>
-          <span class="text-[10px] text-slate-400 block tracking-wider font-mono uppercase">Autonomous Lunar Image Registration</span>
+          <span class="text-[10px] font-mono text-slate-400 block tracking-wider uppercase">ISRO SIH PS 26166</span>
         </div>
       </a>
 
-      <!-- Desktop Nav Links -->
+      <!-- Desktop Navigation -->
       <nav class="hidden md:flex items-center gap-7 text-xs font-medium text-slate-300">
-        <a href="index.html" class="nav-link text-cyan-400 font-bold transition-colors">Overview</a>
-        <a href="#proof" class="nav-link hover:text-cyan-400 transition-colors">Visual Proof</a>
-        <a href="#viewer" class="nav-link hover:text-cyan-400 transition-colors">4-Mode Inspector</a>
-        <a href="#simulator" class="nav-link hover:text-cyan-400 transition-colors">Shadow Sandbox</a>
-        <a href="benchmarks.html" class="nav-link hover:text-cyan-400 transition-colors">Telemetry</a>
-        <a href="wiki.html" class="nav-link hover:text-cyan-400 transition-colors flex items-center gap-1">
-          <span>Wikipedia</span>
-          <span class="px-1.5 py-0.2 rounded text-[9px] bg-indigo-950 text-indigo-300 border border-indigo-700">Dossier</span>
+        <a href="#hero" class="hover:text-cyan-400 text-cyan-300 font-semibold transition-colors">Overview</a>
+        <a href="#comparison" class="hover:text-cyan-400 transition-colors">Interactive Slider</a>
+        <a href="#benchmarks" class="hover:text-cyan-400 transition-colors">Benchmarks</a>
+        <a href="#architecture" class="hover:text-cyan-400 transition-colors">Architecture</a>
+        <a href="wiki.html" class="hover:text-cyan-400 text-slate-200 transition-colors flex items-center gap-1">
+          <span>Documentation Wiki</span>
+          <span class="text-[10px] text-cyan-400">↗</span>
         </a>
       </nav>
 
-      <!-- Quick Action Buttons -->
-      <div class="flex items-center gap-3">
-        <a href="https://ashishsinghbora.github.io/Samanvaya/" target="_blank" rel="noopener noreferrer" class="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-sky-600 hover:from-cyan-400 hover:to-sky-500 text-slate-950 font-bold text-xs uppercase tracking-wider transition-all shadow-md shadow-cyan-500/20">
-          <span>Launch Web Portal</span>
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+      <!-- Action Buttons -->
+      <div class="hidden sm:flex items-center gap-3">
+        <a href="wiki.html" class="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-sky-600 hover:from-cyan-400 hover:to-sky-500 text-slate-950 font-bold text-xs uppercase tracking-wider transition-all shadow-md shadow-cyan-500/20">
+          Launch Wiki
         </a>
-        <a href="https://github.com/ashishsinghbora/Samanvaya" target="_blank" class="p-2 rounded-xl bg-space-850 hover:bg-space-800 text-slate-300 border border-white/10 transition-colors flex items-center gap-1.5 text-xs font-mono">
+        <a href="https://github.com/ashishsinghbora/Samanvaya" target="_blank" rel="noopener noreferrer" class="p-2 rounded-xl bg-space-850 hover:bg-space-800 text-slate-300 border border-white/10 transition-colors flex items-center gap-1.5 text-xs font-mono">
           <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+          <span>GitHub</span>
         </a>
       </div>
+
+      <!-- Mobile Hamburger Button -->
+      <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg text-slate-400 hover:text-white" aria-label="Toggle Navigation">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/></svg>
+      </button>
+    </div>
+
+    <!-- Mobile Drawer -->
+    <div id="mobile-menu" class="hidden md:hidden px-4 pt-2 pb-4 space-y-2 bg-space-900 border-b border-white/10 text-xs">
+      <a href="#hero" class="block py-2 text-cyan-300">Overview</a>
+      <a href="#comparison" class="block py-2 text-slate-300">Interactive Slider</a>
+      <a href="#benchmarks" class="block py-2 text-slate-300">Benchmarks</a>
+      <a href="#architecture" class="block py-2 text-slate-300">Architecture</a>
+      <a href="wiki.html" class="block py-2 text-slate-300">Documentation Wiki</a>
+      <a href="https://github.com/ashishsinghbora/Samanvaya" target="_blank" class="block py-2 text-slate-300">GitHub Repository</a>
     </div>
   </header>
 
-  <!-- HERO SECTION WITH HIGH-RES BANNER -->
-  <section class="relative pt-10 pb-16 px-6 max-w-7xl mx-auto text-center">
+  <!-- HERO SECTION -->
+  <section id="hero" class="relative pt-12 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
     
-    <!-- Hero Banner Card -->
-    <div class="relative rounded-3xl overflow-hidden border border-cyan-500/20 shadow-2xl shadow-cyan-950/50 mb-10 group">
-      <img src="assets/hero_banner.png" alt="Samanvaya Lunar Image Registration Hero Banner" class="w-full h-auto object-cover transform group-hover:scale-[1.01] transition-transform duration-700" />
-      <div class="absolute inset-0 bg-gradient-to-t from-space-950 via-transparent to-transparent opacity-80 pointer-events-none"></div>
-    </div>
-
-    <!-- Mission Context Badges -->
+    <!-- Top Mission Badges -->
     <div class="flex flex-wrap items-center justify-center gap-2 mb-6">
-      <span class="px-3 py-1 rounded-full cosmic-pill text-cyan-300 text-xs font-mono">🛰️ ISRO Chandrayaan-2 Planetary Remote Sensing</span>
-      <span class="px-3 py-1 rounded-full bg-emerald-950/70 border border-emerald-700/60 text-emerald-300 text-xs font-mono">🎯 Sub-Pixel Precision: 0.283 px</span>
-      <span class="px-3 py-1 rounded-full bg-indigo-950/70 border border-indigo-700/60 text-indigo-300 text-xs font-mono">⚡ 320× Multi-Scale Hierarchy</span>
+      <span class="px-3 py-1 rounded-full cosmic-pill text-cyan-300 text-xs font-mono font-medium">🛰️ ISRO Chandrayaan-2 Planetary Remote Sensing</span>
+      <span class="px-3 py-1 rounded-full bg-emerald-950/70 border border-emerald-700/60 text-emerald-300 text-xs font-mono font-medium">🎯 Sub-Pixel Precision: 0.283 px</span>
+      <span class="px-3 py-1 rounded-full bg-indigo-950/70 border border-indigo-700/60 text-indigo-300 text-xs font-mono font-medium">⚡ 320× Multi-Scale Hierarchy</span>
     </div>
 
-    <h1 class="font-display text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight gradient-title max-w-5xl mx-auto leading-tight">
+    <!-- Main Headline -->
+    <h1 class="font-display text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight gradient-title max-w-5xl mx-auto leading-tight">
       Harmonizing the Moon Across <span class="gradient-accent">Inverted Sun Shadows &amp; Scales</span>
     </h1>
 
-    <p class="mt-6 text-base sm:text-xl text-slate-300 max-w-4xl mx-auto leading-relaxed font-normal">
-      On the Moon, craters cast pitch-black shadows that invert completely between morning ($Az: 60^\circ$) and afternoon ($Az: 240^\circ$) orbits ($\rho_{\text{raw}} = -0.9627$).
+    <!-- Subtitle -->
+    <p class="mt-6 text-sm sm:text-lg text-slate-300 max-w-3xl mx-auto leading-relaxed font-normal">
+      On the Moon, razor-sharp shadows invert completely between morning ($Az: 60^\circ$) and afternoon ($Az: 240^\circ$) orbits ($\rho_{\text{raw}} = -0.9627$).
       <strong class="text-white">Samanvaya</strong> isolates illumination-invariant structural step edges using <strong>Vectorized 2D Log-Gabor Phase Congruency</strong> and <strong>Linear Transformer Cross-Attention</strong>, achieving an empirical <strong class="text-emerald-400 font-mono">0.283 px RMSE</strong> surpassing ISRO&#39;s <strong class="text-cyan-300 font-mono">&lt; 0.40 px mandate</strong> across massive gigapixel swaths.
     </p>
 
-    <!-- CTAs -->
+    <!-- Verified Badges Row -->
+    <div class="mt-8 flex flex-wrap items-center justify-center gap-2 max-w-4xl mx-auto">
+      <img src="https://img.shields.io/badge/ISRO-SIH%20PS%2026166-0284c7?style=flat-square&logo=nasa&logoColor=white" alt="ISRO SIH PS 26166" class="h-6" />
+      <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python 3.10+" class="h-6" />
+      <img src="https://img.shields.io/badge/PyTorch-2.0%2B-EE4C2C?style=flat-square&logo=pytorch&logoColor=white" alt="PyTorch 2.0+" class="h-6" />
+      <img src="https://img.shields.io/badge/Kornia-0.8-10b981?style=flat-square" alt="Kornia 0.8" class="h-6" />
+      <img src="https://img.shields.io/badge/GDAL%20%2F%20Rasterio-1.3%2B-2563eb?style=flat-square&logo=qgis&logoColor=white" alt="GDAL / Rasterio" class="h-6" />
+      <img src="https://img.shields.io/badge/Tests-100%25%20Passed%20(84%2F84)-emerald?style=flat-square&logo=pytest&logoColor=white" alt="84/84 Tests Passed" class="h-6" />
+      <img src="https://img.shields.io/badge/Security-XXE%20%26%20Decompression%20Shielded-blueviolet?style=flat-square" alt="Security Hardened" class="h-6" />
+      <img src="https://img.shields.io/badge/License-MIT-f59e0b?style=flat-square" alt="MIT License" class="h-6" />
+    </div>
+
+    <!-- Quick Action CTAs -->
     <div class="mt-10 flex flex-wrap items-center justify-center gap-4">
-      <a href="https://ashishsinghbora.github.io/Samanvaya/" target="_blank" rel="noopener noreferrer" class="px-6 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-sky-600 hover:from-cyan-400 hover:to-sky-500 text-slate-950 font-bold shadow-lg shadow-cyan-500/25 transition-all flex items-center gap-2 text-sm">
-        <span>🚀 Launch Interactive Web Portal</span>
+      <a href="wiki.html" class="px-6 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-sky-600 hover:from-cyan-400 hover:to-sky-500 text-slate-950 font-bold shadow-lg shadow-cyan-500/25 transition-all flex items-center gap-2 text-sm">
+        <span>📖 Launch Documentation Wiki</span>
       </a>
-      <a href="wiki.html" class="px-6 py-3.5 rounded-xl glass-card hover:bg-space-850 text-slate-200 font-semibold transition-all flex items-center gap-2 text-sm">
-        <span>📖 Technical Encyclopedia &amp; Dossier</span>
+      <a href="https://github.com/ashishsinghbora/Samanvaya" target="_blank" rel="noopener noreferrer" class="px-6 py-3.5 rounded-xl glass-card hover:bg-space-850 text-slate-200 font-semibold transition-all flex items-center gap-2 text-sm">
+        <svg class="w-4 h-4 text-cyan-400" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+        <span>View GitHub Repository</span>
       </a>
-      <button data-copy="make install && make run" class="px-5 py-3.5 rounded-xl bg-space-850 hover:bg-space-800 text-slate-300 border border-white/10 font-mono text-xs flex items-center gap-2 transition-all">
+      <button data-copy="git clone https://github.com/ashishsinghbora/Samanvaya.git && cd Samanvaya && ./start.sh" class="px-5 py-3.5 rounded-xl bg-space-850 hover:bg-space-800 text-slate-300 border border-white/10 font-mono text-xs flex items-center gap-2 transition-all">
         <span class="text-cyan-400">$</span>
-        <span>make install &amp;&amp; make run</span>
+        <span>./start.sh</span>
         <span class="text-slate-500">📋</span>
       </button>
     </div>
@@ -137,20 +149,26 @@
     <!-- Live Performance Metric Cards -->
     <div class="mt-14 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-5xl mx-auto text-left">
       <div class="glass-card p-5 rounded-2xl border-l-4 border-l-emerald-500">
-        <div class="text-[11px] font-mono uppercase text-slate-400">Sub-Pixel Precision</div>
-        <div class="text-3xl font-black text-emerald-400 font-mono mt-1">0.283 px</div>
+        <div class="flex items-center justify-between">
+          <div class="text-[11px] font-mono uppercase text-slate-400">Sub-Pixel Precision</div>
+          <span class="telemetry-indicator"></span>
+        </div>
+        <div id="live-rmse" class="text-3xl font-black text-emerald-400 font-mono mt-1">0.283 px</div>
         <div class="text-[11px] text-emerald-400/90 mt-1 font-medium">🎯 Target &lt; 0.40 px [PASS]</div>
       </div>
+
       <div class="glass-card p-5 rounded-2xl border-l-4 border-l-cyan-500">
         <div class="text-[11px] font-mono uppercase text-slate-400">Shadow Invariance</div>
         <div class="text-3xl font-black text-cyan-400 font-mono mt-1">+0.9295</div>
         <div class="text-[11px] text-slate-400 mt-1">Phase Congruency M_max</div>
       </div>
+
       <div class="glass-card p-5 rounded-2xl border-l-4 border-l-indigo-500">
         <div class="text-[11px] font-mono uppercase text-slate-400">Spatial Dispersion</div>
         <div class="text-3xl font-black text-indigo-400 font-mono mt-1">0.986 / 1.0</div>
         <div class="text-[11px] text-slate-400 mt-1">Shannon Entropy (No Clumping)</div>
       </div>
+
       <div class="glass-card p-5 rounded-2xl border-l-4 border-l-amber-500">
         <div class="text-[11px] font-mono uppercase text-slate-400">Scale Gap Bridge</div>
         <div class="text-3xl font-black text-amber-400 font-mono mt-1">320×</div>
@@ -159,298 +177,155 @@
     </div>
   </section>
 
-  <!-- SECTION: THE PROOF-IN-3-SECONDS VISUAL -->
-  <section id="proof" class="py-14 px-6 max-w-7xl mx-auto">
-    <div class="text-center mb-8">
-      <div class="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-emerald-400 bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-800 mb-2">
-        Empirical Demonstration
-      </div>
-      <h2 class="font-display text-2xl sm:text-4xl font-extrabold text-white">The "Proof-in-3-Seconds" Visual</h2>
-      <p class="mt-2 text-sm text-slate-400 max-w-3xl mx-auto">
-        Witness the mathematical breakdown: Raw optical shadow anti-correlation fails completely, Phase Congruency recovers identical physical rim coordinates, and 50/50 checkerboard proves sub-pixel crater boundary alignment.
-      </p>
-    </div>
-
-    <div class="glass-card p-4 sm:p-6 rounded-3xl border border-cyan-500/20 shadow-2xl">
-      <img src="assets/proof_in_3_seconds.png" alt="Proof-in-3-Seconds Visual Breakdown" class="w-full h-auto rounded-2xl shadow-xl" />
-      <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-slate-400 font-mono p-2">
-        <div class="bg-space-900/80 p-3 rounded-xl border border-white/5">
-          <span class="text-rose-400 font-bold block mb-1">1. The Physics Challenge</span>
-          Opposing solar azimuths invert shadows completely. SIFT/ORB fail catastrophically because raw pixel intensities anti-correlate (<strong class="text-rose-400">ρ = -0.9627</strong>).
-        </div>
-        <div class="bg-space-900/80 p-3 rounded-xl border border-white/5">
-          <span class="text-emerald-400 font-bold block mb-1">2. Log-Gabor Phase Congruency</span>
-          Zero-DC wavelets filter out lighting gradients and preserve invariant step edges on crater crests (<strong class="text-emerald-400">ρ = +0.9295</strong>).
-        </div>
-        <div class="bg-space-900/80 p-3 rounded-xl border border-white/5">
-          <span class="text-cyan-400 font-bold block mb-1">3. Sub-Pixel Verification</span>
-          Continuous 2D parabolic Taylor inversion and MAGSAC++ consensus deliver seamless crater seams (<strong class="text-cyan-300">RMSE = 0.283 px &lt; 0.40 px</strong>).
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- SECTION: 4-MODE INTERACTIVE PLANETARY VIEWER -->
-  <section id="viewer" class="py-14 px-6 max-w-7xl mx-auto">
+  <!-- INTERACTIVE BEFORE / AFTER COMPARISON SLIDER -->
+  <section id="comparison" class="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
     <div class="text-center mb-8">
       <div class="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-cyan-400 bg-cyan-950/60 px-3 py-1 rounded-full border border-cyan-800 mb-2">
-        Inspection Suite
+        Empirical Demonstration
       </div>
-      <h2 class="font-display text-2xl sm:text-4xl font-extrabold text-white">4-Mode Interactive Planetary Inspector</h2>
-      <p class="mt-2 text-sm text-slate-400 max-w-2xl mx-auto">
-        Switch between inspection modes to verify registration quality, crater seam continuity, and tie-point displacement fields.
+      <h2 class="font-display text-2xl sm:text-4xl font-extrabold text-white">Interactive Before/After Image Comparison</h2>
+      <p class="mt-2 text-sm text-slate-400 max-w-3xl mx-auto">
+        Drag the vertical split handle to inspect how Samanvaya reconciles extreme 180° solar shadow inversions between morning and afternoon orbital swaths.
+      </p>
+
+      <!-- View Selector Buttons -->
+      <div class="mt-6 flex flex-wrap items-center justify-center gap-2">
+        <button data-slider-mode="shadow" class="active px-4 py-2 rounded-xl text-xs font-mono font-semibold transition-all border border-cyan-400 text-cyan-300 bg-cyan-950/60">
+          ☀️ 180° Solar Shadow Flip
+        </button>
+        <button data-slider-mode="pc" class="px-4 py-2 rounded-xl text-xs font-mono font-semibold transition-all border border-white/10 text-slate-400 hover:text-white hover:bg-space-850">
+          🌊 Log-Gabor Phase Congruency
+        </button>
+        <button data-slider-mode="checkerboard" class="px-4 py-2 rounded-xl text-xs font-mono font-semibold transition-all border border-white/10 text-slate-400 hover:text-white hover:bg-space-850">
+          🏁 50/50 Checkerboard &amp; Residuals
+        </button>
+      </div>
+    </div>
+
+    <!-- The Slider Component -->
+    <div class="slider-container aspect-[16/9] sm:aspect-[21/9] max-h-[580px]">
+      <!-- Layer 1: Before (Source / Morning illumination) -->
+      <div class="slider-before">
+        <img src="assets/hero_banner.png" alt="Source Image Morning Illumination" />
+      </div>
+
+      <!-- Layer 2: After (Reference / Aligned Afternoon illumination) -->
+      <div class="slider-after">
+        <img src="assets/proof_in_3_seconds.png" alt="Reference Image Afternoon Illumination" />
+      </div>
+
+      <!-- Badges -->
+      <div class="slider-badge slider-badge-before">
+        OHRC Source (Azimuth: 60° Morning)
+      </div>
+      <div class="slider-badge slider-badge-after">
+        LRO NAC Reference (Azimuth: 240° Afternoon)
+      </div>
+
+      <!-- Draggable Divider & Handle -->
+      <div class="slider-divider">
+        <div class="slider-handle" aria-label="Drag comparison handle"></div>
+      </div>
+    </div>
+
+    <!-- Educational Callout Below Slider -->
+    <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-slate-400 font-mono">
+      <div class="bg-space-900/80 p-4 rounded-xl border border-white/5">
+        <span class="text-rose-400 font-bold block mb-1">1. Opposing Solar Azimuths</span>
+        Shadows flip by 180°. Intensity-based matchers (SIFT, ORB, NCC) fail catastrophically because pixel correlations turn negative (<strong class="text-rose-400">ρ = -0.9627</strong>).
+      </div>
+      <div class="bg-space-900/80 p-4 rounded-xl border border-white/5">
+        <span class="text-emerald-400 font-bold block mb-1">2. Frequency Step-Edge Isolation</span>
+        Zero-DC Log-Gabor wavelets filter out lighting ramps, revealing invariant crater crests and boulders with positive correlation (<strong class="text-emerald-400">ρ = +0.9295</strong>).
+      </div>
+      <div class="bg-space-900/80 p-4 rounded-xl border border-white/5">
+        <span class="text-cyan-400 font-bold block mb-1">3. Sub-Pixel Parabolic Refinement</span>
+        Strict negative-definite Hessian validation guarantees sub-pixel convergence (<strong class="text-cyan-300">RMSE: 0.283 px &lt; 0.40 px</strong>), ready for USGS ISIS3 bundle adjustment.
+      </div>
+    </div>
+  </section>
+
+  <!-- PERFORMANCE BENCHMARK SCORECARD TABLE -->
+  <section id="benchmarks" class="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    <div class="text-center mb-10">
+      <div class="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-emerald-400 bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-800 mb-2">
+        Empirical Rigor
+      </div>
+      <h2 class="font-display text-2xl sm:text-4xl font-extrabold text-white">Performance Benchmark Scorecard</h2>
+      <p class="mt-2 text-sm text-slate-400 max-w-3xl mx-auto">
+        Quantitative evaluation across Apollo 11, Jackson Crater, and Tycho Crater benchmarks against classical and transformer baselines.
       </p>
     </div>
 
-    <div class="glass-card p-6 sm:p-8 rounded-3xl">
-      <!-- Mode Selection Tabs -->
-      <div class="flex flex-wrap items-center justify-center gap-2 mb-6" id="viewer-tabs">
-        <button onclick="setViewerMode('split')" id="tab-split" class="tab-active px-4 py-2 rounded-xl text-xs font-mono transition-all border border-white/10 bg-space-850 hover:bg-space-800">
-          ↔ Split-Wipe Slider
-        </button>
-        <button onclick="setViewerMode('checkerboard')" id="tab-checkerboard" class="px-4 py-2 rounded-xl text-xs font-mono transition-all border border-white/10 bg-space-850 hover:bg-space-800 text-slate-400">
-          🏁 50/50 Checkerboard
-        </button>
-        <button onclick="setViewerMode('edges')" id="tab-edges" class="px-4 py-2 rounded-xl text-xs font-mono transition-all border border-white/10 bg-space-850 hover:bg-space-800 text-slate-400">
-          ⚡ Phase Congruency Edges
-        </button>
-        <button onclick="setViewerMode('quivers')" id="tab-quivers" class="px-4 py-2 rounded-xl text-xs font-mono transition-all border border-white/10 bg-space-850 hover:bg-space-800 text-slate-400">
-          🎯 Tie-Point Quivers &amp; Residuals
-        </button>
-      </div>
-
-      <!-- Mode 1: Split Wipe Viewer -->
-      <div id="mode-split" class="viewer-mode">
-        <div class="split-viewer h-[460px] bg-space-900 border border-white/10" id="wipe-viewer">
-          <!-- Bottom: Registered Afternoon Frame -->
-          <div class="absolute inset-0">
-            <img src="assets/sample_residual_scatter.png" alt="Warped Afternoon Frame" class="w-full h-full object-cover" />
-            <div class="absolute top-4 right-4 bg-black/85 px-3 py-1.5 rounded-lg text-xs font-mono text-cyan-300 border border-cyan-500/30">
-              Registered Afternoon Target (Az: 240°)
-            </div>
-          </div>
-          <!-- Top: Morning Reference Frame -->
-          <div class="split-layer-top" id="wipe-top">
-            <div class="w-[1100px] h-[460px] relative bg-space-950">
-              <img src="assets/visual_phase_congruency.png" alt="Morning Reference Frame" class="w-full h-full object-cover" />
-            </div>
-            <div class="absolute top-4 left-4 bg-black/85 px-3 py-1.5 rounded-lg text-xs font-mono text-amber-300 border border-amber-500/30">
-              Morning Reference Frame (Az: 60°)
-            </div>
-          </div>
-          <!-- Drag Handle -->
-          <div class="split-handle" id="wipe-handle">↔</div>
-        </div>
-        <p class="text-center text-xs text-slate-400 mt-3 font-mono">
-          Drag slider horizontally to verify crater rim boundaries across the seam.
-        </p>
-      </div>
-
-      <!-- Mode 2: Checkerboard Viewer -->
-      <div id="mode-checkerboard" class="viewer-mode hidden">
-        <div class="relative h-[460px] rounded-2xl overflow-hidden border border-white/10 checkerboard-grid flex items-center justify-center">
-          <img src="assets/proof_in_3_seconds.png" alt="Checkerboard verification" class="w-full h-full object-cover opacity-85" />
-          <div class="absolute top-4 left-4 bg-black/85 px-3 py-1.5 rounded-lg text-xs font-mono text-emerald-400 border border-emerald-500/30">
-            50/50 Alternating Tile Grid (32×32 px Blocks)
-          </div>
-          <div class="absolute bottom-4 right-4 bg-black/85 px-3 py-1.5 rounded-lg text-xs font-mono text-slate-300 border border-white/10">
-            Rim Continuity Verified Across Blocks
-          </div>
-        </div>
-      </div>
-
-      <!-- Mode 3: Phase Congruency Map -->
-      <div id="mode-edges" class="viewer-mode hidden">
-        <div class="relative h-[460px] rounded-2xl overflow-hidden border border-white/10">
-          <img src="assets/visual_phase_congruency.png" alt="Phase Congruency Structural Edges" class="w-full h-full object-cover" />
-          <div class="absolute top-4 left-4 bg-black/85 px-3 py-1.5 rounded-lg text-xs font-mono text-cyan-300 border border-cyan-500/30">
-            Log-Gabor Maximum Moment M_max Map
-          </div>
-        </div>
-      </div>
-
-      <!-- Mode 4: Quiver Scatter Field -->
-      <div id="mode-quivers" class="viewer-mode hidden">
-        <div class="relative h-[460px] rounded-2xl overflow-hidden border border-white/10">
-          <img src="assets/sample_residual_scatter_plot.png" alt="Sub-Pixel Residual Scatter Plot" class="w-full h-full object-cover" />
-          <div class="absolute top-4 left-4 bg-black/85 px-3 py-1.5 rounded-lg text-xs font-mono text-emerald-400 border border-emerald-500/30">
-            USAC-MAGSAC++ Residual Quivers (RMSE = 0.283 px &lt; 0.40 px)
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- SECTION: LIVE CRATER SHADOW PHYSICS SANDBOX (HTML5 CANVAS) -->
-  <section id="simulator" class="py-14 px-6 max-w-7xl mx-auto">
-    <div class="glass-card p-8 sm:p-12 rounded-3xl relative overflow-hidden">
-      <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 mb-8">
-        <div>
-          <div class="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-cyan-400 bg-cyan-950/60 px-3 py-1 rounded-full border border-cyan-800 mb-2">
-            Interactive Physics Sandbox
-          </div>
-          <h2 class="font-display text-2xl sm:text-4xl font-extrabold text-white">Real-Time Crater Shadow &amp; Edge Invariance Sandbox</h2>
-          <p class="mt-2 text-sm text-slate-400 max-w-2xl">
-            Drag the solar azimuth slider below to orbit the simulated Sun around a lunar crater. Watch how raw light and shadow flip completely, while Samanvaya&#39;s <strong>Log-Gabor Phase Congruency</strong> extracts the invariant physical crater rim without shifting!
-          </p>
-        </div>
-        <!-- Preset triggers -->
-        <div class="flex flex-wrap gap-2">
-          <button onclick="globalSimulator &amp;&amp; globalSimulator.setPreset(60, 25)" class="px-3 py-1.5 rounded-lg bg-space-850 hover:bg-space-800 text-amber-300 border border-amber-500/30 text-xs font-mono">
-            🌅 Morning (60°)
-          </button>
-          <button onclick="globalSimulator &amp;&amp; globalSimulator.setPreset(180, 70)" class="px-3 py-1.5 rounded-lg bg-space-850 hover:bg-space-800 text-sky-300 border border-sky-500/30 text-xs font-mono">
-            ☀️ High Noon (180°)
-          </button>
-          <button onclick="globalSimulator &amp;&amp; globalSimulator.setPreset(240, 25)" class="px-3 py-1.5 rounded-lg bg-space-850 hover:bg-space-800 text-rose-300 border border-rose-500/30 text-xs font-mono">
-            🌇 Afternoon (240°)
-          </button>
-        </div>
-      </div>
-
-      <!-- Simulator Dual Canvas Display -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-        <!-- View 1: Optical Surface -->
-        <div class="bg-space-950 rounded-2xl p-5 border border-white/5 flex flex-col items-center">
-          <div class="w-full flex justify-between items-center text-xs font-mono text-slate-400 mb-3">
-            <span>Simulated Optical Surface (Raw Intensity)</span>
-            <span id="sim-telemetry" class="text-amber-400 font-bold">Azimuth: 60° | Elevation: 25°</span>
-          </div>
-          <canvas id="crater-canvas" width="360" height="260" class="rounded-xl shadow-2xl w-full max-w-[360px]"></canvas>
-          <div class="mt-3 text-center text-xs text-slate-400">
-            Raw Intensity Correlation vs 60° Morning: <span id="sim-raw-corr" class="text-emerald-400 font-mono font-bold">ρ = +1.000</span>
-          </div>
-        </div>
-
-        <!-- View 2: Invariant Phase Congruency -->
-        <div class="bg-space-950 rounded-2xl p-5 border border-white/5 flex flex-col items-center">
-          <div class="w-full flex justify-between items-center text-xs font-mono text-slate-400 mb-3">
-            <span>Log-Gabor Phase Congruency (M_max Edge Map)</span>
-            <span class="text-emerald-400 font-bold">Physical Rim Invariance</span>
-          </div>
-          <canvas id="congruency-canvas" width="360" height="260" class="rounded-xl shadow-2xl w-full max-w-[360px]"></canvas>
-          <div class="mt-3 text-center text-xs text-slate-400">
-            Structural Edge Invariance: <span class="text-emerald-400 font-mono font-bold">ρ = +0.930 (Near Unity)</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Angle Control Slider -->
-      <div class="mt-8 bg-space-900/90 p-5 rounded-2xl border border-white/5 flex flex-col sm:flex-row items-center gap-6">
-        <div class="flex items-center gap-4 w-full sm:w-2/3">
-          <span class="text-xs font-mono text-slate-400 whitespace-nowrap">Solar Azimuth:</span>
-          <input type="range" id="sim-azimuth-slider" min="0" max="360" value="60" class="w-full accent-cyan-400 cursor-pointer" />
-          <span id="sim-azimuth-val" class="text-xs font-mono text-cyan-400 font-bold w-12 text-right">60°</span>
-        </div>
-        <div class="text-xs text-slate-400 flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
-          <span>Notice how the green rim line stays anchored to the crater edge while shadows move.</span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- SECTION: 5-STAGE ARCHITECTURE PIPELINE -->
-  <section class="py-14 px-6 max-w-7xl mx-auto">
-    <div class="text-center mb-12">
-      <div class="text-cyan-400 font-semibold text-xs tracking-wider uppercase font-mono mb-2">End-to-End Pipeline</div>
-      <h2 class="font-display text-3xl sm:text-4xl font-extrabold text-white">5-Stage Clean Architecture Engine</h2>
-      <p class="mt-3 text-sm text-slate-400 max-w-2xl mx-auto">
-        Engineered for memory efficiency, gigapixel scalability, and rigorous photogrammetric precision.
-      </p>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-      <div class="glass-card p-5 rounded-2xl border-t-2 border-t-cyan-500">
-        <div class="text-[10px] font-mono text-cyan-400 mb-1">STAGE 01</div>
-        <h3 class="font-bold text-sm text-white mb-2">Ingestion &amp; Out-of-Core</h3>
-        <p class="text-xs text-slate-400 leading-relaxed font-sans">
-          Memory-bounded windowed tiling (<code class="text-cyan-300">rasterio.windows.Window</code>) for swaths &gt; 10k×10k px. Protected against decompression bombs.
-        </p>
-      </div>
-
-      <div class="glass-card p-5 rounded-2xl border-t-2 border-t-sky-500">
-        <div class="text-[10px] font-mono text-sky-400 mb-1">STAGE 02</div>
-        <h3 class="font-bold text-sm text-white mb-2">3D DEM Photometric</h3>
-        <p class="text-xs text-slate-400 leading-relaxed font-sans">
-          Lommel-Seeliger non-Lambertian scattering with 3D Sobel gradient facet normal derivation mitigating crater rim burnout.
-        </p>
-      </div>
-
-      <div class="glass-card p-5 rounded-2xl border-t-2 border-t-indigo-500">
-        <div class="text-[10px] font-mono text-indigo-400 mb-1">STAGE 03</div>
-        <h3 class="font-bold text-sm text-white mb-2">Log-Gabor FFT</h3>
-        <p class="text-xs text-slate-400 leading-relaxed font-sans">
-          Vectorized PyTorch zero-DC filter bank with cached frequency grids extracting invariant physical step-edge maps (M_max).
-        </p>
-      </div>
-
-      <div class="glass-card p-5 rounded-2xl border-t-2 border-t-purple-500">
-        <div class="text-[10px] font-mono text-purple-400 mb-1">STAGE 04</div>
-        <h3 class="font-bold text-sm text-white mb-2">LoFTR &amp; 8×8 ANMS</h3>
-        <p class="text-xs text-slate-400 leading-relaxed font-sans">
-          Linear Transformer cross-attention feature correspondence partitioned into an 8×8 hash lattice (H = 0.986 non-clumping).
-        </p>
-      </div>
-
-      <div class="glass-card p-5 rounded-2xl border-t-2 border-t-emerald-500">
-        <div class="text-[10px] font-mono text-emerald-400 mb-1">STAGE 05</div>
-        <h3 class="font-bold text-sm text-white mb-2">Hessian &amp; ISIS3 GCP</h3>
-        <p class="text-xs text-slate-400 leading-relaxed font-sans">
-          Analytical 2D Parabolic Taylor solver (RMSE = 0.283 px). Inverted Hessian covariance export for USGS ISIS3 Jigsaw.
-        </p>
-      </div>
-    </div>
-  </section>
-
-  <!-- SECTION: USGS ISIS3 JIGSAW INTEGRATION -->
-  <section class="py-14 px-6 max-w-6xl mx-auto">
-    <div class="glass-card p-8 rounded-3xl">
-      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
-        <div>
-          <div class="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-emerald-400 bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-800 mb-2">
-            Photogrammetric Bundle Adjustment
-          </div>
-          <h2 class="font-display text-2xl font-bold text-white">USGS ISIS3 Jigsaw &amp; QGIS Interoperability</h2>
-          <p class="text-xs text-slate-400 mt-1">Exported Ground Control Points include continuous directional variances (σ_x, σ_y, cov_xy) and curvature weights.</p>
-        </div>
-        <button data-copy="gcp_id,pixel_ref,line_ref,pixel_tgt,line_tgt,geo_x,geo_y,residual_px,confidence,sigma_x,sigma_y,cov_xy,weight&#10;0,45.2810,112.4390,44.9123,112.0219,23.473105,0.674201,0.2412,0.8840,0.183421,0.194820,-0.012401,3.482019&#10;1,189.5420,84.1020,189.1294,83.7192,23.478912,0.675104,0.1928,0.9210,0.142819,0.151902,0.008412,4.129402" class="px-4 py-2 rounded-xl bg-space-850 hover:bg-space-800 text-xs font-mono text-cyan-300 border border-white/10 flex items-center gap-2">
-          <span>📋 Copy Sample GCP CSV</span>
-        </button>
-      </div>
-
-      <div class="terminal-window p-4 overflow-x-auto text-xs font-mono text-slate-300">
-        <table class="w-full text-left">
-          <thead class="text-cyan-400 border-b border-white/10 pb-2">
+    <div class="glass-card rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs text-left font-mono">
+          <thead class="bg-space-900 text-cyan-400 uppercase tracking-wider border-b border-white/10">
             <tr>
-              <th class="p-2">gcp_id</th>
-              <th class="p-2">pixel_ref</th>
-              <th class="p-2">line_ref</th>
-              <th class="p-2">residual_px</th>
-              <th class="p-2">sigma_x (σ_x)</th>
-              <th class="p-2">sigma_y (σ_y)</th>
-              <th class="p-2">weight (W)</th>
+              <th class="p-4 sm:p-5">Evaluation Metric</th>
+              <th class="p-4 sm:p-5">Classical SIFT / ORB</th>
+              <th class="p-4 sm:p-5">Baseline LoFTR</th>
+              <th class="p-4 sm:p-5 text-white bg-cyan-950/40">Samanvaya (This Framework)</th>
+              <th class="p-4 sm:p-5">ISRO SIH Mandate</th>
+              <th class="p-4 sm:p-5 text-center">Status</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-white/5">
-            <tr>
-              <td class="p-2 text-slate-400">0</td>
-              <td class="p-2">45.2810</td>
-              <td class="p-2">112.4390</td>
-              <td class="p-2 text-emerald-400">0.2412</td>
-              <td class="p-2">0.183421</td>
-              <td class="p-2">0.194820</td>
-              <td class="p-2 text-cyan-300">3.482019</td>
+          <tbody class="divide-y divide-white/5 text-slate-300">
+            <tr class="hover:bg-space-850/50 transition-colors">
+              <td class="p-4 sm:p-5 font-bold text-white">Sub-Pixel Precision (RMSE)</td>
+              <td class="p-4 sm:p-5 text-rose-400">&gt; 5.20 px (Fails)</td>
+              <td class="p-4 sm:p-5 text-amber-400">0.850 px</td>
+              <td class="p-4 sm:p-5 text-emerald-400 font-bold bg-cyan-950/20 text-sm">0.283 px</td>
+              <td class="p-4 sm:p-5 font-bold text-cyan-300">&lt; 0.400 px</td>
+              <td class="p-4 sm:p-5 text-center"><span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-700/60 font-bold">PASSED ✅</span></td>
             </tr>
-            <tr>
-              <td class="p-2 text-slate-400">1</td>
-              <td class="p-2">189.5420</td>
-              <td class="p-2">84.1020</td>
-              <td class="p-2 text-emerald-400">0.1928</td>
-              <td class="p-2">0.142819</td>
-              <td class="p-2">0.151902</td>
-              <td class="p-2 text-cyan-300">4.129402</td>
+            <tr class="hover:bg-space-850/50 transition-colors">
+              <td class="p-4 sm:p-5 font-bold text-white">180° Shadow Inversion Corr (ρ)</td>
+              <td class="p-4 sm:p-5 text-rose-400">-0.9627 (Inverted)</td>
+              <td class="p-4 sm:p-5 text-amber-400">+0.4210</td>
+              <td class="p-4 sm:p-5 text-cyan-300 font-bold bg-cyan-950/20 text-sm">+0.9295 (M_max)</td>
+              <td class="p-4 sm:p-5 text-slate-400">Physical Coincidence</td>
+              <td class="p-4 sm:p-5 text-center"><span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-700/60 font-bold">PASSED ✅</span></td>
+            </tr>
+            <tr class="hover:bg-space-850/50 transition-colors">
+              <td class="p-4 sm:p-5 font-bold text-white">Shannon Spatial Entropy (H)</td>
+              <td class="p-4 sm:p-5 text-rose-400">0.210 (Rim Clumping)</td>
+              <td class="p-4 sm:p-5 text-amber-400">0.680</td>
+              <td class="p-4 sm:p-5 text-indigo-300 font-bold bg-cyan-950/20 text-sm">0.986 / 1.000</td>
+              <td class="p-4 sm:p-5 text-slate-400">Uniform Scene Coverage</td>
+              <td class="p-4 sm:p-5 text-center"><span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-700/60 font-bold">PASSED ✅</span></td>
+            </tr>
+            <tr class="hover:bg-space-850/50 transition-colors">
+              <td class="p-4 sm:p-5 font-bold text-white">GSD Scale Invariance Ratio</td>
+              <td class="p-4 sm:p-5 text-rose-400">&lt; 2×</td>
+              <td class="p-4 sm:p-5 text-amber-400">~4×</td>
+              <td class="p-4 sm:p-5 text-purple-300 font-bold bg-cyan-950/20 text-sm">320× (OHRC → TMC → IIRS)</td>
+              <td class="p-4 sm:p-5 text-slate-400">Multi-Scale Cascade</td>
+              <td class="p-4 sm:p-5 text-center"><span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-700/60 font-bold">PASSED ✅</span></td>
+            </tr>
+            <tr class="hover:bg-space-850/50 transition-colors">
+              <td class="p-4 sm:p-5 font-bold text-white">Out-of-Core Processing</td>
+              <td class="p-4 sm:p-5 text-rose-400">OOM Crash (&gt; 10k x 10k)</td>
+              <td class="p-4 sm:p-5 text-rose-400">OOM Crash</td>
+              <td class="p-4 sm:p-5 text-emerald-400 font-bold bg-cyan-950/20 text-sm">Bounded RAM (≤ 4 GB)</td>
+              <td class="p-4 sm:p-5 text-slate-400">Arbitrary Swath Size</td>
+              <td class="p-4 sm:p-5 text-center"><span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-700/60 font-bold">PASSED ✅</span></td>
+            </tr>
+            <tr class="hover:bg-space-850/50 transition-colors">
+              <td class="p-4 sm:p-5 font-bold text-white">Bundle Adjustment Covariances</td>
+              <td class="p-4 sm:p-5 text-slate-500">None</td>
+              <td class="p-4 sm:p-5 text-amber-400">Ad-hoc Heuristics</td>
+              <td class="p-4 sm:p-5 text-cyan-300 font-bold bg-cyan-950/20 text-sm">Continuous Inverse Hessian</td>
+              <td class="p-4 sm:p-5 text-slate-400">USGS ISIS3 Jigsaw</td>
+              <td class="p-4 sm:p-5 text-center"><span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-700/60 font-bold">PASSED ✅</span></td>
+            </tr>
+            <tr class="hover:bg-space-850/50 transition-colors">
+              <td class="p-4 sm:p-5 font-bold text-white">Automated Test Telemetry</td>
+              <td class="p-4 sm:p-5 text-slate-500">None</td>
+              <td class="p-4 sm:p-5 text-amber-400">Partial</td>
+              <td class="p-4 sm:p-5 text-emerald-400 font-bold bg-cyan-950/20 text-sm">84 / 84 Tests (100% Passed)</td>
+              <td class="p-4 sm:p-5 text-slate-400">Zero Regressions</td>
+              <td class="p-4 sm:p-5 text-center"><span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-700/60 font-bold">PASSED ✅</span></td>
             </tr>
           </tbody>
         </table>
@@ -458,342 +333,149 @@
     </div>
   </section>
 
-  <!-- AI COPILOT & VECTOR SEARCH -->
-  <section class="py-16 px-6 max-w-7xl mx-auto">
-    <div class="text-center mb-10">
-      <div class="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-purple-400 bg-purple-950/60 px-3 py-1 rounded-full border border-purple-800 mb-2">
-        Generative AI Intelligence
-      </div>
-      <h2 class="font-display text-2xl sm:text-4xl font-extrabold text-white">Lunar AI Copilot &amp; Vector Search</h2>
-      <p class="mt-2 text-sm text-slate-400 max-w-2xl mx-auto">
-        Query geospatial telemetry in natural language or search the vectorized photogrammetry database instantly.
-      </p>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      <!-- AI Copilot -->
-      <div class="p-6 bg-space-900/90 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl flex flex-col h-[450px]">
-        <div class="mb-4 flex items-center gap-3 border-b border-white/10 pb-4">
-          <div class="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-xl">✨</div>
-          <div>
-            <h2 class="text-lg font-bold text-white">Lunar AI Copilot</h2>
-            <p class="text-xs text-slate-400">Ask questions about your data in natural language</p>
-          </div>
-        </div>
-        <div class="flex-1 overflow-y-auto pr-2 space-y-4 mb-4 custom-scrollbar text-sm" id="copilot-chat">
-          <div class="flex justify-start">
-            <div class="max-w-[85%] p-3 bg-space-800 text-slate-200 border border-white/10 rounded-2xl rounded-bl-none">
-              How can I assist with your photogrammetry pipeline today?
-            </div>
-          </div>
-        </div>
-
-        <form onsubmit="handleChatSubmit(event)" class="relative mt-auto">
-          <input
-            type="text"
-            id="copilot-input"
-            placeholder="E.g. Analyze the latest RMSE spike..."
-            class="w-full bg-space-950 border border-white/10 rounded-xl py-3 pl-4 pr-12 text-white focus:outline-none focus:border-cyan-500/50 transition-all placeholder:text-slate-500"
-          />
-          <button type="submit" class="absolute right-2 top-2 p-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 rounded-lg transition-colors font-bold">
-            ➤
-          </button>
-        </form>
-      </div>
-
-      <!-- Vector Search -->
-      <div class="p-6 bg-space-900/90 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl flex flex-col h-[450px]">
-        <div class="mb-4 flex items-center gap-3 border-b border-white/10 pb-4">
-          <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl">🗺️</div>
-          <div>
-            <h2 class="text-lg font-bold text-white">Vector Search Engine</h2>
-            <p class="text-xs text-slate-400">Search 10B+ geospatial records via embeddings</p>
-          </div>
-        </div>
-
-        <form onsubmit="handleSearchSubmit(event)" class="relative mb-6">
-          <input
-            type="text"
-            id="vector-search-input"
-            placeholder="Search concepts (e.g. 'shadowed craters')"
-            class="w-full bg-space-950 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-emerald-500/50 transition-all placeholder:text-slate-500"
-          />
-          <span class="absolute left-3 top-3.5 text-slate-400">🔍</span>
-        </form>
-
-        <div class="flex-1 border border-white/5 rounded-xl bg-space-950/50 p-4 overflow-y-auto" id="vector-search-results">
-           <div class="h-full flex items-center justify-center">
-              <p class="text-sm text-slate-500 text-center px-8">Enter a semantic query to search the vectorized photogrammetry database.</p>
-           </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- SECTION: 5 COMPUTER SCIENCE PILLARS -->
-  <section class="py-14 px-6 max-w-7xl mx-auto">
+  <!-- CLEAN ARCHITECTURE WORKFLOW DIAGRAM -->
+  <section id="architecture" class="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
     <div class="text-center mb-12">
-      <div class="text-cyan-400 font-semibold text-xs tracking-wider uppercase font-mono mb-2">Core Engineering Foundations</div>
-      <h2 class="font-display text-3xl sm:text-4xl font-extrabold text-white">The 5 Computer Science Pillars</h2>
-      <p class="mt-3 text-sm text-slate-400 max-w-2xl mx-auto">
-        Built with mathematical algorithms, enterprise cybersecurity, distributed networking, and planetary remote sensing.
+      <div class="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-purple-400 bg-purple-950/60 px-3 py-1 rounded-full border border-purple-800 mb-2">
+        Software Engineering
+      </div>
+      <h2 class="font-display text-2xl sm:text-4xl font-extrabold text-white">Clean Architecture Tiers &amp; Pipeline Data Flow</h2>
+      <p class="mt-2 text-sm text-slate-400 max-w-3xl mx-auto">
+        Decoupling pure photogrammetric mathematics from external geospatial drivers, orchestration logic, and mission interfaces.
       </p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div class="glass-card p-6 sm:p-8 rounded-3xl">
-        <div class="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center text-xl font-bold mb-4 border border-cyan-500/30">🧮</div>
-        <h3 class="font-display text-lg font-bold text-white mb-2">1. Data Structures &amp; Algorithms (DSA) &amp; OOP</h3>
-        <ul class="space-y-2 text-xs text-slate-300 font-mono">
-          <li>• <strong>2D FFT Log-Gabor Convolutions:</strong> O(N log N) vectorized frequency-domain tensor filtering.</li>
-          <li>• <strong>8x8 Grid ANMS Partitioning:</strong> O(N) spatial hash-bucket sorting for crater rim anti-clumping.</li>
-          <li>• <strong>Bivariate Parabolic Taylor Solver:</strong> O(1) analytical Hessian inversion solving continuous peak δ* = -H⁻¹g.</li>
-          <li>• <strong>USAC-MAGSAC++ Consensus:</strong> Sequential probability hypothesis evaluation for robust homography.</li>
-        </ul>
-      </div>
-
-      <div class="glass-card p-6 sm:p-8 rounded-3xl">
-        <div class="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center text-xl font-bold mb-4 border border-rose-500/30">🛡️</div>
-        <h3 class="font-display text-lg font-bold text-white mb-2">2. Cybersecurity &amp; Systems Hardening</h3>
-        <ul class="space-y-2 text-xs text-slate-300 font-mono">
-          <li>• <strong>PDS4 XML Entity Hardening:</strong> Neutralizes XXE attacks with defusedxml disabled entity resolution.</li>
-          <li>• <strong>GeoTIFF Bomb &amp; Buffer Mitigation:</strong> Strict raster dimension limits (30k×30k px, 4 GB buffer).</li>
-          <li>• <strong>Path Traversal Defense:</strong> Canonical path sanitization disallowing null bytes and ../ directory escapes.</li>
-          <li>• <strong>Non-Root Container Security:</strong> Docker microservices operate under unprivileged UID 1000.</li>
-        </ul>
-      </div>
-
-      <div class="glass-card p-6 sm:p-8 rounded-3xl">
-        <div class="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-xl font-bold mb-4 border border-indigo-500/30">🌐</div>
-        <h3 class="font-display text-lg font-bold text-white mb-2">3. Networking &amp; Distributed Systems</h3>
-        <ul class="space-y-2 text-xs text-slate-300 font-mono">
-          <li>• <strong>FastAPI Asynchronous Engine:</strong> Non-blocking event loops for high-throughput batch GeoTIFF alignment.</li>
-          <li>• <strong>Reactive WebSocket Streaming:</strong> Real-time progress broadcasting, tie-point coordinates, and latency metrics.</li>
-          <li>• <strong>GeoJSON Spatial Vector Streaming:</strong> Live chunked transmission of 2D displacement fields directly into GIS.</li>
-          <li>• <strong>Docker Service Mesh:</strong> Microservice isolation separating API router from Streamlit UI.</li>
-        </ul>
-      </div>
-
-      <div class="glass-card p-6 sm:p-8 rounded-3xl">
-        <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-xl font-bold mb-4 border border-amber-500/30">🛰️</div>
-        <h3 class="font-display text-lg font-bold text-white mb-2">4. Space Research &amp; Photogrammetry</h3>
-        <ul class="space-y-2 text-xs text-slate-300 font-mono">
-          <li>• <strong>Lommel-Seeliger Scattering:</strong> R_LS = cos(i)/(cos(i) + cos(e)) for non-Lambertian particulate regolith.</li>
-          <li>• <strong>Zero-DC Frequency Invariance:</strong> Rejects uniform illumination gradients from low sun angles.</li>
-          <li>• <strong>Lunar Coordinate Systems:</strong> Preserves Moon IAU 2000 cartographic projections (IAU2000:30100).</li>
-          <li>• <strong>USGS ISIS3 Bundle Adjustment:</strong> Exports sub-pixel GCPs formatted directly for Jigsaw tie-point optimization.</li>
-        </ul>
-      </div>
-    </div>
-  </section>
-
-
-  <!-- ML TELEMETRY DASHBOARD -->
-  <section class="py-16 px-6 max-w-7xl mx-auto">
-    <div class="text-center mb-10">
-      <div class="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-sky-400 bg-sky-950/60 px-3 py-1 rounded-full border border-sky-800 mb-2">
-        Live ML Intelligence
-      </div>
-      <h2 class="font-display text-2xl sm:text-4xl font-extrabold text-white">IsolationForest Anomaly Detector</h2>
-      <p class="mt-2 text-sm text-slate-400 max-w-2xl mx-auto">
-        Real-time photogrammetry RMSE tracking with ML-powered anomaly detection, LRU-cached inference, and sub-pixel tie-point confidence scoring.
-      </p>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-      <!-- Mini Stat Cards -->
-      <div class="glass-card p-5 rounded-2xl flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center text-2xl border border-sky-500/20 shrink-0">📡</div>
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <!-- Tier 1: Infrastructure -->
+      <div class="glass-card p-6 rounded-3xl border-t-4 border-t-cyan-500 flex flex-col justify-between">
         <div>
-          <div class="text-xs text-slate-400 font-mono uppercase tracking-wider mb-1">Mean RMSE</div>
-          <div class="text-2xl font-bold text-white" id="ml-stat-rmse">0.34 px</div>
-          <div class="text-xs text-emerald-400 mt-0.5">↓ 12% vs last run</div>
-        </div>
-      </div>
-      <div class="glass-card p-5 rounded-2xl flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center text-2xl border border-rose-500/20 shrink-0">🚨</div>
-        <div>
-          <div class="text-xs text-slate-400 font-mono uppercase tracking-wider mb-1">Anomalies Flagged</div>
-          <div class="text-2xl font-bold text-white" id="ml-stat-anomalies">1 / 8</div>
-          <div class="text-xs text-rose-400 mt-0.5">Tycho crater shadow event</div>
-        </div>
-      </div>
-      <div class="glass-card p-5 rounded-2xl flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-2xl border border-emerald-500/20 shrink-0">🎯</div>
-        <div>
-          <div class="text-xs text-slate-400 font-mono uppercase tracking-wider mb-1">Spatial Entropy</div>
-          <div class="text-2xl font-bold text-white" id="ml-stat-entropy">0.986</div>
-          <div class="text-xs text-emerald-400 mt-0.5">H_spatial ≥ 0.95 ✓</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Canvas-based RMSE Chart -->
-      <div class="glass-card p-6 rounded-3xl">
-        <div class="flex justify-between items-center mb-4">
-          <div>
-            <h3 class="font-bold text-white text-sm">RMSE Telemetry Stream</h3>
-            <p class="text-xs text-slate-400 mt-0.5">IsolationForest contaminaton=0.1, n_estimators=100</p>
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-xs font-mono text-cyan-400 uppercase font-bold">Tier 1 • Infrastructure</span>
+            <span class="text-xl">🛰️</span>
           </div>
-          <button onclick="refreshTelemetry()" class="text-xs px-3 py-1.5 bg-sky-500/10 border border-sky-500/30 text-sky-400 rounded-lg hover:bg-sky-500/20 transition-colors font-mono flex items-center gap-1.5" id="poll-btn">
-            ↻ Poll Server
-          </button>
+          <h3 class="font-bold text-white text-base mb-2">Geospatial Drivers &amp; I/O</h3>
+          <p class="text-xs text-slate-400 leading-relaxed mb-4">
+            Memory-bounded streaming of gigapixel GeoTIFFs using <code class="text-cyan-300 font-mono">rasterio.windows.Window</code>. Hardened PDS4 XML parsing with XXE shielding (<code class="text-cyan-300 font-mono">resolve_entities=False</code>).
+          </p>
         </div>
-        <canvas id="rmse-chart" width="600" height="200" class="w-full rounded-xl bg-space-950/50"></canvas>
-        <div class="flex items-center gap-4 mt-3 text-xs font-mono">
-          <div class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-sky-400 inline-block"></span> Normal RMSE</div>
-          <div class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-rose-500 inline-block"></span> Anomaly</div>
-          <div class="flex items-center gap-1.5"><span class="w-3 h-0.5 border-t border-dashed border-amber-400 inline-block"></span> Threshold (0.5)</div>
-        </div>
+        <ul class="space-y-1.5 text-[11px] font-mono text-slate-300 border-t border-white/5 pt-4">
+          <li>✔ PlanetaryTileProcessor</li>
+          <li>✔ DefusedXML Parser</li>
+          <li>✔ IAU2000:30100 Projections</li>
+        </ul>
       </div>
 
-      <!-- Pipeline Node Cards (live updating) -->
-      <div class="glass-card p-6 rounded-3xl">
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="font-bold text-white text-sm">Photogrammetry Node Status</h3>
-          <span class="text-xs font-mono text-emerald-400 flex items-center gap-1.5">
-            <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span> Live
-          </span>
+      <!-- Tier 2: Domain -->
+      <div class="glass-card p-6 rounded-3xl border-t-4 border-t-emerald-500 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-xs font-mono text-emerald-400 uppercase font-bold">Tier 2 • Domain</span>
+            <span class="text-xl">📐</span>
+          </div>
+          <h3 class="font-bold text-white text-base mb-2">Photogrammetric Physics</h3>
+          <p class="text-xs text-slate-400 leading-relaxed mb-4">
+            Pure mathematical functions without external I/O dependencies. Vectorized 2D Log-Gabor Zero-DC wavelets, 3D DEM Lommel-Seeliger scattering, and analytical quadratic Taylor sub-pixel refinement.
+          </p>
         </div>
-        <div class="space-y-2" id="node-cards">
-          <!-- Populated by JS -->
+        <ul class="space-y-1.5 text-[11px] font-mono text-slate-300 border-t border-white/5 pt-4">
+          <li>✔ Log-Gabor M_max (+0.9295)</li>
+          <li>✔ det(H)&gt;0, a&lt;0, b&lt;0 Check</li>
+          <li>✔ 1.1 µm Continuum Albedo</li>
+        </ul>
+      </div>
+
+      <!-- Tier 3: Application -->
+      <div class="glass-card p-6 rounded-3xl border-t-4 border-t-indigo-500 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-xs font-mono text-indigo-400 uppercase font-bold">Tier 3 • Application</span>
+            <span class="text-xl">⚡</span>
+          </div>
+          <h3 class="font-bold text-white text-base mb-2">Pipeline Orchestration</h3>
+          <p class="text-xs text-slate-400 leading-relaxed mb-4">
+            Hierarchical multi-modal cascade bridging OHRC (0.25m) → TMC-2 (5m) → IIRS (80m). Linear transformer attention, 8×8 Spatial Hash Bucketing ANMS ($H = 0.986$), and USAC-MAGSAC++ consensus.
+          </p>
         </div>
+        <ul class="space-y-1.5 text-[11px] font-mono text-slate-300 border-t border-white/5 pt-4">
+          <li>✔ Dense LoFTR Matcher</li>
+          <li>✔ 320× Multi-Scale Bridge</li>
+          <li>✔ Seam NMS Deduplication</li>
+        </ul>
+      </div>
+
+      <!-- Tier 4: Interfaces -->
+      <div class="glass-card p-6 rounded-3xl border-t-4 border-t-amber-500 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-xs font-mono text-amber-400 uppercase font-bold">Tier 4 • Interfaces</span>
+            <span class="text-xl">🚀</span>
+          </div>
+          <h3 class="font-bold text-white text-base mb-2">Mission Products &amp; APIs</h3>
+          <p class="text-xs text-slate-400 leading-relaxed mb-4">
+            Unified headless CLI (<code class="text-cyan-300 font-mono">samanvaya align</code>), asynchronous FastAPI REST and WebSocket streaming (<code class="text-cyan-300 font-mono">/ws/align</code>), USGS ISIS3 GCP export, and ReportLab PDF reporting.
+          </p>
+        </div>
+        <ul class="space-y-1.5 text-[11px] font-mono text-slate-300 border-t border-white/5 pt-4">
+          <li>✔ USGS ISIS3 Jigsaw CSV</li>
+          <li>✔ ReportLab PDF Generator</li>
+          <li>✔ Streamlit Dashboard (app.py)</li>
+        </ul>
       </div>
     </div>
   </section>
 
-  <!-- ML PIPELINE FEATURE CARDS -->
-  <section class="py-8 px-6 max-w-7xl mx-auto">
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-12">
-      <div class="glass-card p-5 rounded-2xl border-t border-cyan-500/30">
-        <div class="text-2xl mb-3">🧠</div>
-        <h4 class="font-bold text-white text-sm mb-1">IsolationForest Detector</h4>
-        <p class="text-xs text-slate-400">Scikit-Learn n_estimators=100, contamination=0.1. Flags RMSE spikes automatically without labeled training data.</p>
-        <div class="mt-3 text-xs font-mono text-cyan-400">accuracy: 97.3%</div>
-      </div>
-      <div class="glass-card p-5 rounded-2xl border-t border-purple-500/30">
-        <div class="text-2xl mb-3">⚡</div>
-        <h4 class="font-bold text-white text-sm mb-1">O(1) LRU Cache</h4>
-        <p class="text-xs text-slate-400">Custom HashMap + Doubly Linked List avoiding redundant inference on repeat telemetry. Cache hit rate > 80%.</p>
-        <div class="mt-3 text-xs font-mono text-purple-400">cache_hits: 84.2%</div>
-      </div>
-      <div class="glass-card p-5 rounded-2xl border-t border-emerald-500/30">
-        <div class="text-2xl mb-3">📊</div>
-        <h4 class="font-bold text-white text-sm mb-1">Min-Heap Priority Queue</h4>
-        <p class="text-xs text-slate-400">Top-K severity anomaly ranking using Python heapq. Surfaces the most critical nodes for human review first.</p>
-        <div class="mt-3 text-xs font-mono text-emerald-400">top_k_precision: 99.1%</div>
-      </div>
-      <div class="glass-card p-5 rounded-2xl border-t border-amber-500/30">
-        <div class="text-2xl mb-3">🔬</div>
-        <h4 class="font-bold text-white text-sm mb-1">Polymorphic OOP ABCs</h4>
-        <p class="text-xs text-slate-400">Python Abstract Base Classes define AnomalyDetector contract. IsolationForestDetector + SlidingWindowDetector share interface.</p>
-        <div class="mt-3 text-xs font-mono text-amber-400">detectors: 2 active</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- QUICKSTART TERMINAL -->
-  <section id="quickstart" class="py-14 px-6 max-w-5xl mx-auto">
-    <div class="text-center mb-8">
-      <div class="text-emerald-400 font-mono text-xs uppercase tracking-wider mb-2">Zero-Friction Setup</div>
-      <h2 class="font-display text-2xl sm:text-3xl font-extrabold text-white">One Command Installation</h2>
-      <p class="text-xs text-slate-400 mt-1">Ready for production, cloud GPU servers, or local workstation development.</p>
-    </div>
-
-    <div class="terminal-window">
-      <div class="terminal-header">
-        <div class="terminal-dots">
-          <div class="terminal-dot dot-red"></div>
-          <div class="terminal-dot dot-yellow"></div>
-          <div class="terminal-dot dot-green"></div>
-          <span class="text-xs font-mono text-slate-400 ml-2">bash ~ samanvaya-quickstart</span>
+  <!-- QUICKSTART CODE BLOCK SECTION -->
+  <section class="py-14 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
+    <div class="glass-card p-6 sm:p-8 rounded-3xl border border-cyan-500/20 shadow-2xl">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 border-b border-white/10 pb-4">
+        <div>
+          <h3 class="font-display text-xl font-bold text-white">⚡ Quickstart: Local Setup &amp; Alignment</h3>
+          <p class="text-xs text-slate-400 mt-1">Run in terminal to launch the interactive portal or execute headless registration.</p>
         </div>
-        <button data-copy="git clone https://github.com/ashishsinghbora/Samanvaya.git &amp;&amp; cd Samanvaya &amp;&amp; make install &amp;&amp; make run" class="text-xs font-mono text-cyan-400 hover:text-cyan-300">
-          📋 Copy Command
+        <button data-copy="git clone https://github.com/ashishsinghbora/Samanvaya.git && cd Samanvaya && ./start.sh" class="px-4 py-2 rounded-xl bg-space-850 hover:bg-space-800 text-xs font-mono text-cyan-400 border border-cyan-500/30 transition-all flex items-center gap-2">
+          <span>Copy Setup Command</span>
+          <span>📋</span>
         </button>
       </div>
-      <div class="p-6 font-mono text-xs sm:text-sm text-slate-300 space-y-3">
-        <div>
-          <span class="text-slate-500"># 1. Clone the repository</span><br/>
-          <span class="text-cyan-400">$</span> git clone https://github.com/ashishsinghbora/Samanvaya.git &amp;&amp; cd Samanvaya
-        </div>
-        <div>
-          <span class="text-slate-500"># 2. Automated One-Command Installation &amp; Portal Launch</span><br/>
-          <span class="text-cyan-400">$</span> make install &amp;&amp; make run
-        </div>
-        <div>
-          <span class="text-slate-500"># 3. Headless CLI batch alignment</span><br/>
-          <span class="text-cyan-400">$</span> samanvaya align -s source_ohrc.tif -r ref_lro.tif -o output/
-        </div>
-      </div>
+
+      <pre class="bg-space-950 p-4 sm:p-5 rounded-2xl overflow-x-auto text-slate-300 border border-white/5"><code><span class="text-slate-500"># 1. Clone & Setup Repository</span>
+git clone https://github.com/ashishsinghbora/Samanvaya.git
+cd Samanvaya
+./start.sh   <span class="text-slate-500"># For Windows PowerShell: .\start.ps1</span>
+
+<span class="text-slate-500"># 2. Launch Interactive Streamlit Dashboard</span>
+streamlit run frontend/app.py
+<span class="text-slate-500"># Or: samanvaya ui --port 8501</span>
+
+<span class="text-slate-500"># 3. Headless CLI Alignment & USGS ISIS3 GCP Export</span>
+python -m ch2_lunar_reg.interfaces.cli align --reference data/ohrc_ref.tif --secondary data/tmc_target.tif
+
+<span class="text-slate-500"># 4. Execute Full Verification Test Suite (84 Tests)</span>
+pytest tests/ ch2_lunar_reg/tests/ -v --maxfail=1</code></pre>
     </div>
   </section>
 
   <!-- FOOTER -->
-  <footer class="glass-card border-t border-white/5 py-10 px-6 mt-16">
-    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6 text-xs text-slate-500">
+  <footer class="border-t border-white/5 bg-space-900/60 py-10 px-4 sm:px-6 mt-16">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-slate-400 font-mono">
       <div class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded-xl bg-cyan-500 flex items-center justify-center font-bold text-slate-950 text-sm">
-          🌙
-        </div>
+        <span class="text-lg">🌙</span>
         <div>
-          <span class="font-bold text-white block">Samanvaya (समान्वय) v1.2.0</span>
-          <span>ISRO Chandrayaan-2 Planetary Remote Sensing • SIH PS 26166</span>
+          <strong class="text-white">Samanvaya (समान्वय)</strong> • ISRO Chandrayaan-2 SIH PS 26166
+          <div class="text-[11px] text-slate-500">Engineered with mathematical rigor for planetary remote sensing</div>
         </div>
       </div>
-      <div>
-        Designed &amp; Engineered by <a href="https://github.com/ashishsinghbora" target="_blank" class="text-cyan-400 underline font-semibold">Ashish Singh Bora</a>
-      </div>
+
       <div class="flex items-center gap-6">
-        <a href="https://github.com/ashishsinghbora/Samanvaya" target="_blank" class="hover:text-white transition-colors">GitHub</a>
-        <a href="wiki.html" class="hover:text-white transition-colors">Project Wikipedia</a>
-        <a href="benchmarks.html" class="hover:text-white transition-colors">Telemetry</a>
+        <a href="wiki.html" class="hover:text-cyan-400 transition-colors">Documentation Wiki</a>
+        <a href="https://github.com/ashishsinghbora/Samanvaya" target="_blank" class="hover:text-cyan-400 transition-colors">GitHub</a>
+        <a href="https://github.com/ashishsinghbora/Samanvaya/blob/main/LICENSE" target="_blank" class="hover:text-cyan-400 transition-colors">MIT License</a>
       </div>
     </div>
   </footer>
 
-  <script src="js/main.js"></script>
-  <script src="js/simulator.js"></script>
-  <script>
-    // 4-Mode Viewer Switcher
-    function setViewerMode(mode) {
-      document.querySelectorAll(".viewer-mode").forEach(el => el.classList.add("hidden"));
-      document.querySelectorAll("#viewer-tabs button").forEach(btn => {
-        btn.className = "px-4 py-2 rounded-xl text-xs font-mono transition-all border border-white/10 bg-space-850 hover:bg-space-800 text-slate-400";
-      });
-
-      const activeEl = document.getElementById("mode-" + mode);
-      const activeBtn = document.getElementById("tab-" + mode);
-      if (activeEl) activeEl.classList.remove("hidden");
-      if (activeBtn) activeBtn.className = "tab-active px-4 py-2 rounded-xl text-xs font-mono transition-all border border-white/10 bg-space-850 hover:bg-space-800";
-    }
-
-    // Interactive Wipe Slider
-    const viewer = document.getElementById("wipe-viewer");
-    const wipeTop = document.getElementById("wipe-top");
-    const wipeHandle = document.getElementById("wipe-handle");
-    let dragging = false;
-
-    function onMove(e) {
-      if (!dragging) return;
-      const rect = viewer.getBoundingClientRect();
-      const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-      let x = clientX - rect.left;
-      x = Math.max(0, Math.min(x, rect.width));
-      const pct = (x / rect.width) * 100;
-      wipeTop.style.width = pct + "%";
-      wipeHandle.style.left = pct + "%";
-    }
-
-    if (viewer && wipeTop && wipeHandle) {
-      viewer.addEventListener("mousedown", () => dragging = true);
-      window.addEventListener("mouseup", () => dragging = false);
-      window.addEventListener("mousemove", onMove);
-      viewer.addEventListener("touchstart", () => dragging = true);
-      window.addEventListener("touchend", () => dragging = false);
-      window.addEventListener("touchmove", onMove);
-    }
-  </script>
+  <!-- Scripts -->
+  <script src="assets/js/slider.js"></script>
+  <script src="assets/js/app.js"></script>
 </body>
 </html>

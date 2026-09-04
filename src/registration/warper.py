@@ -71,6 +71,13 @@ class SubPixelRefiner:
             dyy = Z[2, 1] - 2 * Z[1, 1] + Z[0, 1]
             dxy = (Z[2, 2] - Z[2, 0] - Z[0, 2] + Z[0, 0]) / 4.0
             
+            # Enforce strict negative-definite Hessian check for local maximum:
+            # det(H) = dxx * dyy - dxy^2 > 0 with dxx < 0 and dyy < 0
+            det_H = dxx * dyy - dxy**2
+            if det_H <= 0 or dxx >= 0 or dyy >= 0:
+                # Saddle point, ridge, or local minimum: reject subpixel displacement
+                return float(x), float(y)
+            
             # Hessian matrix
             H = np.array([[dxx, dxy], 
                           [dxy, dyy]])
